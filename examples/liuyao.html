@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>魁君堂·六爻排盘</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#ffffff;color:#1a1a1a;
+  font-family:"Source Han Sans SC","Source Han Sans CN","Noto Sans CJK SC","Noto Sans SC",
+    "思源黑体","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  font-size:15px;line-height:1.5}
+.pan{max-width:660px;margin:0 auto;padding:26px 24px 22px}
+
+/* —— 页顶：魁君堂 logo ＋ 题名 —— */
+/* logo 与「题名＋副标题」整块上下居中；logo 高取等于该块总高，上下才齐平 */
+.top{--logoh:clamp(32px,7vw,44px);display:flex;align-items:center;gap:14px;
+  padding:0 0 13px;margin:0 0 16px;border-bottom:1px solid #ededed}
+.top .tlogo{flex:0 0 auto;display:block;line-height:0;text-decoration:none;border:0}
+.top .tlogo img{display:block;height:var(--logoh);width:auto;border:0}
+.top .tlogo:hover{opacity:.82}
+.top .tseal{display:inline-flex;align-items:center;justify-content:center;
+  border:1.5px solid #9c3a2e;color:#9c3a2e;border-radius:2px;padding:.2em .45em;
+  font-size:.82em;letter-spacing:.1em;writing-mode:vertical-rl}
+.top .tsep{flex:0 0 auto;width:1px;align-self:stretch;margin:2px 0;background:#e6e6e6}
+.top .ttext{min-width:0}
+.top h1{margin:0;font-size:1.3em;font-weight:600;letter-spacing:.16em;
+  line-height:1.24;color:#1a1a1a;white-space:nowrap}
+.top .tsub{margin:.3em 0 0;font-size:.76em;color:#8c8c8c;letter-spacing:.09em;
+  line-height:1.3;white-space:nowrap}
+
+/* —— 起卦面板：卡片分块，四组各一行 —— */
+.panel{margin:0 0 1.5em;padding:16px 18px 15px;background:#f7f6f2; /* 照道长参考图取色 */
+  border:1px solid #f0efea;border-radius:12px}
+/* 四组等距：每组行高恒为 30px，组间距恒为 12px，视觉上段距一律相等 */
+.pgroup{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;
+  align-items:center;min-height:30px}
+.pgroup+.pgroup{margin-top:12px}
+.pg-lab{display:inline-flex;align-items:center;gap:8px;color:#1f1f1f;font-size:1.02em;
+  font-weight:600;letter-spacing:.08em;white-space:nowrap;line-height:1}
+.pg-lab::before{content:"";flex:0 0 auto;width:3px;height:1em;border-radius:2px;background:#9c3a2e}
+.pg-body{display:flex;flex-wrap:wrap;align-items:center;gap:9px 14px;min-width:0;min-height:30px}
+.fld{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;min-width:0}
+/* 方式组恒一行（指令 49）：自动/手工·公历/农历任何宽度不折行 */
+.pg-mode{flex-wrap:nowrap;gap:8px 12px}
+/* 所问一项用 basis 0 撑余宽：若按 auto，input 的固有宽（默认 20 字符）会把整行顶断 */
+.fld-wide{flex:1 1 0;min-width:0}
+.fld>span{color:#4a4a4a;font-size:.92em}
+.ptext,.psel,.pbtn{height:30px;font:inherit;font-size:.95em;color:#1a1a1a;background:#fff;
+  border:1px solid #e4e4e4;border-radius:7px;padding:0 9px;line-height:1}
+.ptext{width:6.4em}
+/* 所问弹性填满余宽，窄屏也不掉行 */
+.ptext.wide{width:auto;flex:1 1 0;min-width:3.4em}
+.psel{padding-right:18px}                     /* 右侧留给原生下拉箭头，免得箭头压字 */
+.psel-s{min-width:3.8em}
+.ptext:hover,.psel:hover{border-color:#d6d6d6}
+.ptext:focus,.psel:focus{outline:none;border-color:#c8a29b;box-shadow:0 0 0 3px rgba(156,58,46,.08)}
+.ptext::placeholder{color:#b6b6b6}
+.pbtn{cursor:pointer;padding:0 12px;background:#fff}
+.pbtn:hover{background:#f6f6f6;border-color:#d6d6d6}
+.pr{display:inline-flex;align-items:center;gap:6px;color:#333;font-size:.94em;white-space:nowrap}
+.pr input{accent-color:#9c3a2e;width:14px;height:14px;margin:0}
+.vsep{width:1px;height:15px;background:#e8e8e8}
+/* 时间组：恒为一行，任何分辨率都不折行（单位并入下拉文本，不再另占字位）
+   箭头自绘：原生箭头在内容框内另占约 16px，五个下拉就是 80px，窄屏正是被它挤爆的
+   弹性填满（指令 65）：五个日期下拉自身伸长填满整行——没有中段空白，
+   现时按钮自然贴到全局右缘，间隙保持小而均匀 */
+.time-grid{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;width:100%}
+.time-grid .date{display:flex;flex-wrap:nowrap;align-items:center;gap:5px;
+  flex:1 1 auto;min-width:0}
+.time-grid .date .dsel{flex:1 1 auto;min-width:0}
+.dsel{position:relative;display:inline-flex;flex:0 1 auto;min-width:0}
+.dsel .psel{width:auto}                    /* 其余组：宽度随最长选项，不硬拉满，免裁字 */
+.time-grid .date .psel{flex:1 1 auto}   /* 时间组例外（指令 65）：flex 逐级填满（width:100% 在 inline-flex 内解析不到拉伸值），箭头才贴框 */
+.dsel::after{content:"";position:absolute;right:7px;top:50%;width:0;height:0;
+  border:3.5px solid transparent;border-top-color:#8c8c8c;
+  transform:translateY(-25%);pointer-events:none}
+.dsel .psel{appearance:none;-webkit-appearance:none;min-width:0;
+  padding-left:5px;padding-right:15px}    /* 右内距给箭头留位，免贴字 */
+.time-grid .pbtn{flex:0 0 auto;padding:0 9px}
+/* 六爻：恒为三列两行——初二三（内卦）／四五上（外卦），任何宽度都不变 */
+.yao-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px 10px;width:100%}
+.yao-cell{display:flex;align-items:center;gap:4px;min-width:0}
+.yao-cell>span{flex:0 0 2.2em;color:#4a4a4a;font-size:.92em;white-space:nowrap;
+  height:30px;line-height:30px;display:inline-flex;align-items:center}
+.yao-cell .dsel{flex:1 1 auto;min-width:0}
+.yao-cell .psel{flex:1 1 auto;min-width:0;width:100%}
+/* 折叠钮在页头右上角（指令 39），随页头各元素垂直居中 */
+.top .fold{margin-left:auto;flex:0 0 auto}
+.fold{height:26px;font-size:.84em;color:#7a7a7a;background:#fff;
+  border:1px solid #ececec;border-radius:6px;padding:0 10px;cursor:pointer}
+.fold:hover{background:#f7f7f7;color:#555}
+.panel[hidden]{display:none}
+.ask{margin:0;font-size:1em;font-weight:500;letter-spacing:.02em;line-height:1.9}
+.meta{margin:0;font-size:1em;line-height:1.9}
+/* 起卦信息区用「无边框表格」承载（指令 76/79/81）：Word 粘贴时表格逐行紧贴、不套段落「段后距」；
+   段落版（<p>＋<br>、甚至 inline margin）在 Word 里仍被撑开且「改行距无效」，表格版与盘面同理最稳 */
+.headtbl{width:100%;border-collapse:collapse;border:0;table-layout:fixed;margin:0}
+.headtbl td{padding:0;border:0;vertical-align:top;line-height:1.9;font-size:1em;white-space:normal}
+.headtbl .ask{word-spacing:.4em}
+.headtbl .shen{font-size:.88em;color:#4a4a4a;word-spacing:.4em}  /* 项间用半角空格＋word-spacing：全角空格行尾不裁、窄屏会撑出 13px 溢出（BUG-45） */
+.headtbl .shen .lab{color:#1a1a1a}
+.headtbl .shen span{white-space:nowrap}
+/* 复制卦例钮（指令 83）：与页头「收起排卦」同款 .fold，只去掉箭头；
+   置于 #pan-head 之外（.headwrap 内）——引擎重绘只换 head/board 的 innerHTML，不会覆盖它，
+   手工选中复制时它也不在选区内；user-select:none 再兜一层，确保永不进入 Word */
+.headwrap{position:relative}
+.copybtn{position:absolute;right:0;top:0;background:#fff;white-space:nowrap;
+  user-select:none;-webkit-user-select:none}
+.copybtn.done{color:#a02b2b;border-color:#e8d8d8}
+.headtbl tr:first-child td{padding-right:80px}   /* 首行右侧给按钮让位，免长问句顶到钮上 */
+/* 打印／另存 PDF 时不印操作钮（指令 84）：钮是交互件，不属于卦例内容；
+   钮既隐藏，首行为它让出的右内距也一并归零，免纸上留一段空白 */
+@media print{.copybtn,.top .fold{display:none}.headtbl tr:first-child td{padding-right:0}}
+/* 旬空与正文同字号同色（指令 43），靠继承实现，不另设样式 */
+
+/* —— 盘面：真表格，列宽写明 —— */
+.board{width:100%;max-width:550px;margin:0 auto;border-collapse:collapse;table-layout:fixed;border:0}
+/* 盘面字体与表宽强耦合（指令 41）：9 列表 550px↔15px 字（1/36.667）、静卦 318px↔15px（1/21.2），
+   列宽用百分比、字宽随表等比，墨迹比例恒定，卦名居中才「时刻」成立。
+   耦合基准用**容器**宽（cqw）而非视口：预览面板、iframe、分屏等「容器≠视口」场景同样成立（BUG-40） */
+.pan{container-type:inline-size}
+/* 字号随宽度收窄（指令 61 根治）：双保险——先写 vw 版（不认 cqw 的内核照常按视口
+   收缩，比例与列宽耦合一致：.pan 左右内距恒 13px，容器宽=100vw−26px，两版数值相等），
+   支持 cqw 的内核再用 @supports 覆盖为容器版（保住 BUG-40 的容器≠视口修复）。
+   此前单靠 cqw，失效内核退回继承字号（比例错误），盘面五字干支装不下列宽，
+   <wbr> 处折成两行——卦象分两行、行距过大、线压字、卦名截断皆此一因（指令 59） */
+.top,.panel,.brand{font-size:min(15px,max(9px,calc((100vw - 26px)/32)))}
+#pan-head,#pan-board,.headwrap{font-size:min(15px,calc((100vw - 26px)/36.667))}
+#pan-board{margin-top:1.1em}   /* 恢复合并前神煞 margin-bottom 带来的盘前间距（指令 79） */
+.sixpage #pan-head,.sixpage #pan-board,.sixpage .headwrap{font-size:min(15px,calc((100vw - 26px)/21.2))}
+@supports (width:1cqw){
+  .top,.panel,.brand{font-size:min(15px,max(9px,calc(100cqw/32)))}
+  #pan-head,#pan-board,.headwrap{font-size:min(15px,calc(100cqw/36.667))}
+  .sixpage #pan-head,.sixpage #pan-board,.sixpage .headwrap{font-size:min(15px,calc(100cqw/21.2))}
+}
+/* 列宽比例（指令 41、42）：本卦与变卦的卦名一律以「六亲纳甲｜爻｜世应」三列的
+   墨迹中心为居中基准，六神、伏神、动爻不计（道长明示）。
+   本卦六列之上，卦体墨迹中心在 th 几何中心右侧，以 .gmain 内距定向；
+   变卦三列列宽本身满足 c7−c9=3.75ch 恒等式，无需定向。 */
+.board col.c1{width:5.818%}
+.board col.c2{width:14.091%}
+.board col.c3{width:14.364%}
+.board col.c4{width:9.091%}
+.board col.c5{width:5.455%}
+.board col.c6{width:12.318%}
+.board col.c7{width:17.773%}
+.board col.c8{width:12.727%}
+.board col.c9{width:8.364%}
+/* 卦名居中基准（指令 74）：只随卦象（六亲纳甲｜爻线），不考虑世应——
+   本卦 gmain 左距 2.41%、静卦 9.89%、变卦 gsub 右距 6.51%（表宽百分比，跨宽度恒定） */
+.board .gmain{padding-left:2.41%}
+.board .gsub{padding-right:6.51%}
+/* 静卦只有六列：表宽收为 318px（15px 字的六列之和，比例 1/21.2），卦名定向同上 */
+.board.six{width:318px;max-width:100%}
+.board.six col.c1{width:10.063%}
+.board.six col.c2{width:24.371%}
+.board.six col.c3{width:24.843%}
+.board.six col.c4{width:15.723%}
+.board.six col.c5{width:12.579%}
+.board.six col.c6{width:12.421%}
+.board.six .gmain{padding-left:9.89%}
+.board th,.board td{padding:.3em 0;font-weight:400;white-space:nowrap;vertical-align:middle;line-height:1.4}
+.board .gname{font-size:1em;font-weight:600;text-align:center;padding-bottom:.7em;letter-spacing:.02em}
+.board .gname .tag{font-weight:400}   /* 括注与卦名同大（指令 38），只以字重区分 */
+.board .liushen{text-align:right;color:#666}
+/* 格内一律单行（指令 59 绝对兜底）：任何格永不折成两行 */
+.board th,.board td{white-space:nowrap}
+.board .fush{text-align:right;color:#6b6b6b}
+.board .qin{text-align:right}
+/* 爻线（指令 55 重合 bug 的根治）：▁ 字符保留在 DOM 里（复制进 Word 仍是
+   阴阳爻字符），但墨迹设为透明——手机端 ▁ 字体回退后墨迹顶满字身框、上移后
+   横穿前后文字，字符方案跨端不可控；可见线改由 CSS 绘制：宽恒 3em（与字符
+   等宽）、垂直居中于行（指令 37）、两端必留格内余白，任何设备均不会与
+   六亲／世应接触。断线两段各 0.7em、中缝 0.6em，与「▁　▁」同构 */
+.board .yao{text-align:center;letter-spacing:0;position:relative;color:transparent}
+.board .yao::before,.board .yao::after{content:"";position:absolute;top:50%;
+  height:.075em;transform:translateY(-50%);background:#1a1a1a;border-radius:1px}
+/* 线长 2em（两端各内缩 0.5em），与六亲／世应留出明确间隙（指令 57）；断线两段各 0.7em、中缝 0.6em */
+/* 宽幅爻线 2.8em（指令 71「放大时爻位要加长」）：爻列实测 3.333em，两侧各余 0.267em */
+.board .yao.y1::before{left:calc(50% - 1.4em);width:2.8em}
+.board .yao.y0::before{left:calc(50% - 1.4em);width:.95em}
+.board .yao.y0::after{right:calc(50% - 1.4em);width:.95em}
+.board .sy{text-align:left;font-weight:600;padding-left:.55em}
+/* 动爻标记贴右（指令 70）：九列时本卦与变卦之间的中段空白被压到最小；
+   动爻列不参与卦名居中基准（居中只算六亲纳甲｜爻｜世应），此改动不扰居中。
+   静卦六列仍左对齐（标记紧随世应） */
+.board:not(.six) .dong{text-align:right;padding-left:0;padding-right:.25em}
+.board .dong{text-align:left;color:#9c3a2e;padding-left:.25em}
+.note{margin:.9em 0 0;color:#6b6b6b;font-size:.92em}
+
+/* 页脚：居中三行——logo／署名／公众号·微信·官网（指令 36，照道长参考图） */
+.brand{margin-top:2.4em;padding-top:1.1em;border-top:1px solid #e8e8e8;
+  display:flex;flex-direction:column;align-items:center;gap:.55em;
+  color:#6b6b6b;font-size:.76em;line-height:1.62;text-align:center}
+.brand .logo{flex:0 0 auto;display:block;line-height:0;text-decoration:none;border:0}
+.brand .logo img{display:block;height:clamp(21px,4vw,28px);width:auto;border:0}
+.brand .logo:hover{opacity:.82}
+.brand .seal{flex:0 0 auto;display:inline-block;border:1.5px solid #9c3a2e;color:#9c3a2e;
+  border-radius:2px;font-size:.94em;line-height:1.12;text-decoration:none;letter-spacing:.04em;
+  writing-mode:vertical-rl;text-align:center;padding:.22em .16em}
+.brand p{margin:0}
+.brand .sign{color:#333;letter-spacing:.06em}
+.brand .fmeta{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;max-width:100%}
+/* 桌面端页脚信息行「单行居中」（指令 82）：不换行约需 624px、栏宽 612px，故略缩字号 .95em 收纳；
+   窄屏（容器 <600px）仍允许换行，否则字会小到不可读 */
+@container (min-width:600px){.brand .fmeta{flex-wrap:nowrap;font-size:.95em}}
+.brand .sep{padding:0 .6em;color:#c4c4c4}
+.brand a{color:#6b6b6b;text-decoration:none;border-bottom:1px solid #d8d8d8}
+.brand .logo{border-bottom:0}
+.brand a:hover{color:#9c3a2e;border-color:#9c3a2e}
+
+@media (max-width:620px){
+  /* 窄屏兜底（版面规则已容器化，见 @container）：仅剩基准字与面板留白 */
+  body{font-size:clamp(9px,calc((100vw - 26px)/32),15px)}
+  .pan{padding:20px 13px 18px}
+}
+@container (max-width:640px){
+  /* 窄屏不折行：整表按可用宽度等比缩字，列宽比例同步收窄 */
+  .board{width:100%}
+  /* 窄屏列宽比例不变：盘面字体已与表宽耦合（1/36.667、静卦 1/21.2），居中恒成立 */
+  .board th,.board td{padding:.3em 0}
+  .top{--logoh:32px;gap:10px;padding-bottom:10px;margin-bottom:14px}
+  .top h1{font-size:1.16em;letter-spacing:.1em}
+  .top .tsub{font-size:.7em;letter-spacing:.03em}
+  .panel{padding:14px 15px 13px}
+  .pgroup+.pgroup{margin-top:13px}
+  .pg-lab{line-height:1.2;font-size:1.02em;letter-spacing:.06em}
+  .pg-body{gap:8px 12px;min-height:0}
+  .ptext{width:4.6em}
+  .ptext.wide{width:auto;flex:1 1 0;min-width:3em}
+  .fld-wide{flex:1 1 0;min-width:0}
+  /* 窄幅爻线维持 2em（间隙优先，指令 57） */
+  .board .yao.y1::before{left:calc(50% - 1em);width:2em}
+  .board .yao.y0::before{left:calc(50% - 1em);width:.7em}
+  .board .yao.y0::after{right:calc(50% - 1em);width:.7em}
+  .time-grid{gap:2px;font-size:.94em}   /* 组名同行后更紧：时间组整体微缩 */
+  .time-grid .date{gap:1px}
+  .time-grid .pbtn{padding:0 5px}
+  .dsel .psel{padding-left:3px;padding-right:12px}
+  .dsel::after{right:6px;border-width:3px}
+  .time-grid .pbtn{padding:0 7px}
+  .yao-grid{gap:8px 8px}
+  .yao-cell{gap:4px}
+  .yao-cell>span{flex:0 0 2.2em;font-size:.88em;white-space:nowrap}
+  .yao-cell .dsel .psel{padding-left:4px;padding-right:14px}
+  .brand{gap:.45em}
+  .top .fold,.copybtn{padding:0 8px;font-size:.78em}   /* 复制卦例钮与页头钮同步收窄（指令 83） */
+}
+
+@container (max-width:345px){
+  /* 345 以下：组名同行（指令 48）后更紧——组名列收窄、面板内距收窄、时间组再降字 */
+  .panel{padding:12px 6px 11px}
+  .pgroup{grid-template-columns:auto minmax(0,1fr);column-gap:8px}
+  .dsel .psel{padding-left:2px;padding-right:8px;font-size:.72em}
+  .dsel::after{right:3px;border-width:2.5px}
+  .time-grid{gap:1px}
+  .time-grid .date{gap:1px}
+  .time-grid .pbtn{padding:0 3px;font-size:.72em}
+}
+@container (max-width:400px){
+  /* 400 以下：六爻仍须三列两行，故再收标签宽与下拉内距 */
+  .yao-grid{gap:8px 4px}
+  .yao-cell{gap:2px}
+  .yao-cell>span{flex:0 0 1.9em;font-size:.78em}
+  .yao-cell .dsel .psel{padding-left:3px;padding-right:11px;font-size:.82em}
+  .yao-cell .dsel::after{right:4px;border-width:2.5px}
+}
+
+  /* 400 以下：六爻仍须三列两行，故再收标签宽与下拉内距 */
+  .yao-grid{gap:8px 4px}
+  .yao-cell{gap:2px}
+  .yao-cell>span{flex:0 0 1.9em;font-size:.78em}
+  .yao-cell .dsel .psel{padding-left:3px;padding-right:11px;font-size:.82em}
+  .yao-cell .dsel::after{right:4px;border-width:2.5px}
+}
+@container (max-width:360px){
+  /* 320 级极窄屏：时间组仍须一行，故再收字号与箭头位 */
+  .dsel .psel{padding-left:4px;padding-right:14px;font-size:.9em}
+  .dsel::after{right:5px;border-width:2.5px}
+  .time-grid .pbtn{padding:0 5px;font-size:.9em}
+}
+
+  /* 320 级极窄屏：时间组仍须一行，故再收字号与箭头位 */
+  .dsel .psel{padding-left:4px;padding-right:14px;font-size:.9em}
+  .dsel::after{right:5px;border-width:2.5px}
+  .time-grid .pbtn{padding:0 5px;font-size:.9em}
+}
+</style>
+</head>
+<body>
+<main class="pan sixpage">
+<header class="top"><a class="tlogo" href="https://www.kuijuntang.com" target="_blank" rel="noopener" title="魁君堂官网"><img src="data:image/png;base64,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M4YvMoUvMn82Nn8zM3kwMHczM3IzM38vL3ovL3E4OGYzM28vL4QuMoMuMYMtMYIuMYItMYItMIEtMYEtMIAtMH8uLn8tMH8tLn4tMH0tLnwtLXsuLngtLXYtLXUtLXMuLoAsMIAsL38sMH8sL38sLn4sMH4sL34rL30sL30sLX0rL30rLnwsL3wrMHwrL3wrLnwrLXwrK3ssLnosL3osLnosLHsrL3srLnorLnsrLXsrK3orLXorLHorK3ksLHgsLngsLHkrL3krLngrMHkrLXgrLXkrK3grLHgrK3csLHcrLncrLXYrLncrK3YrK3UsLHQsLHUrLnUrK3QrK3IrK24sLH8qKnwqMHwqLnsqL3sqLnwqLXsqLXsqLHoqL3oqLnoqLXoqLHoqKnkqMHkqLnkqLXkqLHkqKngqMXgqLngqLXgqLHgqK3gqKncqLncqLXcqLHcqK3cqKnYqL3YqLXYqLHYqK3YqKnUqLXUqLHUqKnQqKnMqKnEqKmoqKv8AAJEkSJEkJKoAVaoAAH8nMX8nL38mM38kNn8mJn8kJH8iLn8fH38Af38AP38AAHwpMHspMXwpLnopLnopLXkpLnkpLXspKXkpLHkpK3kpKXgpLngpLXgpLHgpK3gpKXooLXooLHkoLnkoLXkoLHgoLngoLXgoLHkoK3ooKHgoK3goKHsmLnolL3kmLHgmLnglLXkkMHgeLXcpLncpLXcpLHcpK3cpKXcoLncoLXcnL3cnLncnLXcoLHcoK3cnK3cnJ3ciM3ciInYpL3UnMXEoMG0kSHImM3ElL3UoLnMmLnYpLXUpLXYoLXUoLXMoLXUnLXYkLXYpLHUpLHYoLHUoLHMoLHUnLHQmLHYpK3YpKXUpK3UpKXYoK3UoKHYnK3UnJ3YlK3MpKXIpKXMmJnImJmsoKG0kJHMiLnEcOHEcKnEcHG8fL2YZJl8fH1UAVVUAAD8AAAAAAP///wtC+N4AAAEAdFJOU////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wBT9wclAAAYa0lEQVR42u2dTY/cRnqA++z1+m5lvCLRcW4yO+IyTmNoBIuQwgQIMNDCh/0DjlbIjIEpASoGKRpY7R/ZDLwIy0cJyDUsAT74FwjJoaGLEOyfIFNsVhW/2VVk8UPy0D60erqbbNbTb73f7yYtDgificd+EP/X3/B/4N/DKEA4/kv6MiKB+6fsuZe3QXp3/PyODX9w5Tk2/S8KIhzGAaKP3Y8h+1u89T1vb+eHs3cxjhB95PnH4xIcDxK+eRnEYRy/iF8B/DwKURRAgmKMSJz/D3EEQXR3zz8EYC7AmY8gCpDvOPv9uQsDFJDd1+xFoRMihGAAIQwC+sj3fPoIIlg6wPZ+dhjlwyyO7XZrWTvbuRfnH7l/cnfv319gnuxMl7DlR8cje0S2mEsYk8DKgWDzIP0HxjgIYPAFyj/Ssy/du7v/ngLz9oyQFgTIlrAXvasDM/ggJvtI7wU09RCTJMndMs4LjN2OA9lCoQIjTcDASw4MgsRAeni5I2ZeYGK7QxpsxYISJ9SCC3JwCZjPoSZe7oiZ735RYMh5m/xAKP7rWLzMynSbAGOIRu5IL9gHuhSY7b9puwF3xKjdruF3LJMw+yoFiJAAAu/c+yURL3u7g9Ts3u1sn8AR0CCHf+DfU2DMSOMduINBEZiBtywDxi0TQKC7NXY+9cVgp/S6gxPBiJA4NKknBpKhzPAdKf0e0I/QegfuaFAFZtA9o8BgUNCCHBPc4rjnDbfUCvdNfxAyh/tCK4pd6BO9N+AOhzmI2aTRLhDCZevdSP3snwHTV1eDkQvEJ/gQeWQBEftz5yoZS8wmJWxHCtDWu5Z+38W1o+ybAZ54+9EV+GR+YH72okgDMGEODLLPnyq9U5UYRD55U7yZboPE+HFuYGbevNbI5nhggiMwyLtSfeuVg1Rwcc1iQ4oNCltgx3q//dqM8GS8irlGYKIMGORXdBf/wrVhUHLdR78Aj5/V3/trgGRpIb5Rll9PjnugHcwMzLxrl7Qf7/metEnjzG9HzEID/eqRv6V+OgA+DsVzxKP2kwdwEMfhNz5/9vGFJC3b7cWf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" width="560" height="126" alt="魁君堂"></a><span class="tsep" aria-hidden="true"></span><div class="ttext"><h1>六爻排盘</h1><p class="tsub">京房八宫 · 纳甲六亲</p></div><button type="button" class="fold" id="f-fold" aria-expanded="true" aria-controls="panel">收起排卦 ▲</button></header>
+<form class="panel" id="panel" autocomplete="off" onsubmit="return false">
+  <div class="pgroup">
+    <span class="pg-lab">信息</span>
+    <div class="pg-body">
+      <label class="fld"><span>姓名</span><input class="ptext" id="f-name" type="text" placeholder="可不填"></label>
+      <label class="fld"><span>性别</span><select class="psel psel-s" id="f-gender"><option>男</option><option>女</option></select></label>
+      <label class="fld fld-wide"><span>所问</span><input class="ptext wide" id="f-q" type="text" placeholder="所问事情填写"></label>
+    </div>
+  </div>
+
+  <div class="pgroup">
+    <span class="pg-lab">方式</span>
+    <div class="pg-body pg-mode">
+      <label class="pr"><input type="radio" name="mode" value="auto"><span>自动起卦</span></label>
+      <label class="pr"><input type="radio" name="mode" value="manual" checked><span>手工指定</span></label>
+      <button type="button" class="pbtn" id="f-recast" hidden title="模拟三枚铜钱，一爻一掷">点击起卦</button>
+      <span class="vsep"></span>
+      <label class="pr"><input type="radio" name="cal" value="solar" checked><span>公历</span></label>
+      <label class="pr"><input type="radio" name="cal" value="lunar"><span>农历</span></label>
+    </div>
+  </div>
+
+  <div class="pgroup">
+    <span class="pg-lab">时间</span>
+    <div class="pg-body time-grid">
+      <span class="date">
+        <span class="dsel"><select class="psel ysel-y" id="f-y"></select></span>
+        <span class="dsel"><select class="psel ysel-n" id="f-m"></select></span>
+        <span class="dsel"><select class="psel ysel-n" id="f-d"></select></span>
+        <span class="dsel"><select class="psel ysel-y" id="f-h"></select></span>
+        <span class="dsel"><select class="psel ysel-n" id="f-i"></select></span>
+      </span>
+      <button type="button" class="pbtn" id="f-now">现时</button>
+    </div>
+  </div>
+
+  <div class="pgroup" id="row-yao">
+    <span class="pg-lab">六爻</span>
+    <div class="pg-body yao-grid">
+      <label class="yao-cell"><span>初爻</span><span class="dsel"><select class="psel ysel" id="y1"></select></span></label>
+      <label class="yao-cell"><span>二爻</span><span class="dsel"><select class="psel ysel" id="y2"></select></span></label>
+      <label class="yao-cell"><span>三爻</span><span class="dsel"><select class="psel ysel" id="y3"></select></span></label>
+      <label class="yao-cell"><span>四爻</span><span class="dsel"><select class="psel ysel" id="y4"></select></span></label>
+      <label class="yao-cell"><span>五爻</span><span class="dsel"><select class="psel ysel" id="y5"></select></span></label>
+      <label class="yao-cell"><span>上爻</span><span class="dsel"><select class="psel ysel" id="y6"></select></span></label>
+    </div>
+  </div>
+</form>
+<div class="headwrap"><button type="button" class="fold copybtn" id="f-copy" title="复制卦例（起卦信息＋卦象）到剪贴板">复制卦例</button><div id="pan-head">
+<table class="headtbl"><tbody><tr><td><span class="ask">男测</span></td></tr><tr><td><span class="meta">公历：2026年11月3日 20时36分</span></td></tr><tr><td><span class="meta">干支：丙午年 戊戌月 辛巳日 戊戌时<span class="kong">　（旬空：申酉）</span></span></td></tr><tr><td class="shenrow"><span class="shen"><span class="lab">神煞：</span><span>驿马-亥</span> <span>桃花-午</span> <span>日禄-酉</span> <span>贵人-午，寅</span> <span>文昌-子</span> <span>羊刃-申</span> <span>将星-酉</span> <span>谋星-未</span> <span>劫煞-寅</span> <span>灾煞-卯</span> <span>华盖-丑</span> <span>日德-巳</span> <span>天马-戌</span> <span>天医-酉</span></span></td></tr></tbody></table>
+</div></div>
+<div id="pan-board">
+<table class="board six"><colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"></colgroup><thead><tr><th colspan="6" class="gname gmain">乾宫：乾为天<span class="tag">（六冲）</span></th></tr></thead><tbody><tr><td class="liushen">螣蛇</td><td class="fush"></td><td class="qin">父母壬戌土</td><td class="yao y1">───</td><td class="sy">世</td><td class="dong"></td></tr><tr><td class="liushen">勾陈</td><td class="fush"></td><td class="qin">兄弟壬申金</td><td class="yao y1">───</td><td class="sy"></td><td class="dong"></td></tr><tr><td class="liushen">朱雀</td><td class="fush"></td><td class="qin">官鬼壬午火</td><td class="yao y1">───</td><td class="sy"></td><td class="dong"></td></tr><tr><td class="liushen">青龙</td><td class="fush"></td><td class="qin">父母甲辰土</td><td class="yao y1">───</td><td class="sy">应</td><td class="dong"></td></tr><tr><td class="liushen">玄武</td><td class="fush"></td><td class="qin">妻财甲寅木</td><td class="yao y1">───</td><td class="sy"></td><td class="dong"></td></tr><tr><td class="liushen">白虎</td><td class="fush"></td><td class="qin">子孙甲子水</td><td class="yao y1">───</td><td class="sy"></td><td class="dong"></td></tr></tbody></table>
+<p class="note">六爻安静，无变卦。</p>
+</div>
+<footer class="brand"><a class="logo" href="https://www.kuijuntang.com" target="_blank" rel="noopener" title="魁君堂官网"><img src="data:image/png;base64,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M4YvMoUvMn82Nn8zM3kwMHczM3IzM38vL3ovL3E4OGYzM28vL4QuMoMuMYMtMYIuMYItMYItMIEtMYEtMIAtMH8uLn8tMH8tLn4tMH0tLnwtLXsuLngtLXYtLXUtLXMuLoAsMIAsL38sMH8sL38sLn4sMH4sL34rL30sL30sLX0rL30rLnwsL3wrMHwrL3wrLnwrLXwrK3ssLnosL3osLnosLHsrL3srLnorLnsrLXsrK3orLXorLHorK3ksLHgsLngsLHkrL3krLngrMHkrLXgrLXkrK3grLHgrK3csLHcrLncrLXYrLncrK3YrK3UsLHQsLHUrLnUrK3QrK3IrK24sLH8qKnwqMHwqLnsqL3sqLnwqLXsqLXsqLHoqL3oqLnoqLXoqLHoqKnkqMHkqLnkqLXkqLHkqKngqMXgqLngqLXgqLHgqK3gqKncqLncqLXcqLHcqK3cqKnYqL3YqLXYqLHYqK3YqKnUqLXUqLHUqKnQqKnMqKnEqKmoqKv8AAJEkSJEkJKoAVaoAAH8nMX8nL38mM38kNn8mJn8kJH8iLn8fH38Af38AP38AAHwpMHspMXwpLnopLnopLXkpLnkpLXspKXkpLHkpK3kpKXgpLngpLXgpLHgpK3gpKXooLXooLHkoLnkoLXkoLHgoLngoLXgoLHkoK3ooKHgoK3goKHsmLnolL3kmLHgmLnglLXkkMHgeLXcpLncpLXcpLHcpK3cpKXcoLncoLXcnL3cnLncnLXcoLHcoK3cnK3cnJ3ciM3ciInYpL3UnMXEoMG0kSHImM3ElL3UoLnMmLnYpLXUpLXYoLXUoLXMoLXUnLXYkLXYpLHUpLHYoLHUoLHMoLHUnLHQmLHYpK3YpKXUpK3UpKXYoK3UoKHYnK3UnJ3YlK3MpKXIpKXMmJnImJmsoKG0kJHMiLnEcOHEcKnEcHG8fL2YZJl8fH1UAVVUAAD8AAAAAAP///wtC+N4AAAEAdFJOU////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wBT9wclAAAYa0lEQVR42u2dTY/cRnqA++z1+m5lvCLRcW4yO+IyTmNoBIuQwgQIMNDCh/0DjlbIjIEpASoGKRpY7R/ZDLwIy0cJyDUsAT74FwjJoaGLEOyfIFNsVhW/2VVk8UPy0D60erqbbNbTb73f7yYtDgificd+EP/X3/B/4N/DKEA4/kv6MiKB+6fsuZe3QXp3/PyODX9w5Tk2/S8KIhzGAaKP3Y8h+1u89T1vb+eHs3cxjhB95PnH4xIcDxK+eRnEYRy/iF8B/DwKURRAgmKMSJz/D3EEQXR3zz8EYC7AmY8gCpDvOPv9uQsDFJDd1+xFoRMihGAAIQwC+sj3fPoIIlg6wPZ+dhjlwyyO7XZrWTvbuRfnH7l/cnfv319gnuxMl7DlR8cje0S2mEsYk8DKgWDzIP0HxjgIYPAFyj/Ssy/du7v/ngLz9oyQFgTIlrAXvasDM/ggJvtI7wU09RCTJMndMs4LjN2OA9lCoQIjTcDASw4MgsRAeni5I2ZeYGK7QxpsxYISJ9SCC3JwCZjPoSZe7oiZ735RYMh5m/xAKP7rWLzMynSbAGOIRu5IL9gHuhSY7b9puwF3xKjdruF3LJMw+yoFiJAAAu/c+yURL3u7g9Ts3u1sn8AR0CCHf+DfU2DMSOMduINBEZiBtywDxi0TQKC7NXY+9cVgp/S6gxPBiJA4NKknBpKhzPAdKf0e0I/QegfuaFAFZtA9o8BgUNCCHBPc4rjnDbfUCvdNfxAyh/tCK4pd6BO9N+AOhzmI2aTRLhDCZevdSP3snwHTV1eDkQvEJ/gQeWQBEftz5yoZS8wmJWxHCtDWu5Z+38W1o+ybAZ54+9EV+GR+YH72okgDMGEODLLPnyq9U5UYRD55U7yZboPE+HFuYGbevNbI5nhggiMwyLtSfeuVg1Rwcc1iQ4oNCltgx3q//dqM8GS8irlGYKIMGORXdBf/wrVhUHLdR78Aj5/V3/trgGRpIb5Rll9PjnugHcwMzLxrl7Qf7/metEnjzG9HzEID/eqRv6V+OgA+DsVzxKP2kwdwEMfhNz5/9vGFJC3b7cWf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" width="560" height="126" alt="魁君堂"></a><p class="sign">膠東魁君堂　復城道長　制作</p><p class="fmeta"><span>微信公众号：魁君堂</span><span class="sep">｜</span><span>复城道长微信：18550386868</span><span class="sep">｜</span><span>魁君堂官网：<a href="https://www.kuijuntang.com" target="_blank" rel="noopener">www.kuijuntang.com</a></span></p></footer>
+</main>
+<script>
+window.__JIE__="05nf12f31zhx2x343v974tx25sum6rqq7qas8obp9lrraiqv05x512or1zrm2xcw3vj24u705t4j6s0m7qkm8oli9m1maj0s067312yq201j2xmp3vsq4ugj5tdy6s9y7qty8oux9mb5ajah06gv138j20ba2xwd3w2d4uq75tno6sjr7r3u8p4t9ml1ajkb06qp13ic20l32y663wc64v005txj6stn7rdp8pen9musaju105wf12o31zqx2xc23vi24u5t5t376rz87qj98ok79m0daizm066112xr200o2xlv3vrw4ufo5td36s937qt48ou29maaaj9l06fz137m20af2xvi3w1h4up85tmn6sin7r2q8p3q9mk0ajjb06pp13hb20k12y533wb24uyv5twb6sse7rcg8pde9mtmajsv05v912mw1zpo2xat3vgu4u4p5t276rya7qia8oj79lzdaiym065112wr1zzk2xkm3vqj4ue85tbl6s7l7qrm8osl9m8taj8406ek136a20922xu43w004unp5tl46sh87r1d8p2e9minajhv06o713ft20ik2y3o3w9n4uxf5tuw6sr17rb58pc69mseajrm05tx12li1zo82x9b3vfa4u315t0e6rwf7qgi8ohj9lxtaix5063i12v51zxv2xix3vow4ucn5ta36s657qq88ora9m7naj7106dg1351207o2xsl3vye4um45tjj6sfn7qzt8p0w9mh9ajgn06n313ep20hd2y293w814uvp5tt56spa7r9g8paj9mquajq605sl12k91zn02x813vdx4u1n5sz26rv67qfb8oge9lwoaiw0062g12u51zww2xhx3vnq4uba5t8k6s4j7qon8ops9m66aj5m06c3133r206h2xrg3vx94ukw5ti86sea7qyf8ozl9mfzajfd06ls13de20g32y123w6z4uuq5ts66soa7r8e8p9h9mpsajp605rl12j81zlx2x6w3vcs4u0h5sxu6rtv7qdx8oey9lv9aiun061412su1zvl2xgl3vmg4ua65t7l6s3p7qnu8oox9m59aj4m06b1132o205c2xq93vw24ujq5th66sdc7qxl8oyr9mf4ajeg06kt13cd20f02xzx3w5p4utd5tqt6sn07r798p8g9motajo405qh12i01zkn2x5m3vbh4tz85swo6rsv7qd48oeb9luqaiu4060i12s21zun2xfi3vl84u8t5t656s287qmf8ono9m47aj3q06a8131u204e2xp63vut4uic5tfp6sbv7qw58oxf9mdwajde06jv13bg20e12xyu3w4j4us55tpk6slr7r618p799mnpajn505pm12h81zjv2x4r3vag4txy5sv76rr87qbf8ocn9lt3aisk05z212qr1ztg2xed3vk24u7m5t4v6s0w7ql48omd9m2waj2e068v130g20322xnw3vtl4uh55teh6sak7qut8ow29mclajc406il13a520cp2xxi3w374uqr5to46sk77r4e8p5l9mm1ajli05nz12fl1zi72x323v8t4twh5stw6rq17qa98obf9lruairb05xs12pf1zs22xcv3vii4u615t3c6rzf7qjo8okw9m1eaj0w067e12z0201m2xme3vs04ufh5tct6s8z7qtc8oun9mb5ajak06gy138h20b12xvu3w1k4up65tmm6siv7r388p4k9ml2ajki05mv12ed1zgw2x1p3v7e4tuy5ss96rod7q8n8o9y9lqjaiq205wj12o21zql2xbc3vgz4u4i5t1v6ry07qic8ojp9m0caizx066f12xy200e2xl13vql4ue35tbi6s7r7qs68otk9ma7aj9s06gb137v20ab2xuy3w0g4unw5tl86shf7r1t8p369mjqajj905lr12dd1zfy2x0o3v694ttr5sr36rn97q7n8o929lpoaip705vq12nc1zpx2xan3vg64u3k5t0r6rwu7qh68oil9lzbaiyy065i12x41zzm2xkb3vpt4ud65tae6s6i7qqv8osa9m8yaj8k06f3136m20942xtt3vzf4umy5tkc6sgi7r0v8p289miuajif05ky12cj1zf12wzr3v5c4tst5sq26rm57q6e8o7p9loaainv05ug12m31zoo2x9e3vex4u2c5szm6rvr7qg38ohg9ly3aixo064612vq1zy72xiw3voe4ubv5t976s5g7qpx8ord9m80aj7k06e0135i207x2xsl3vy44ulk5tiv6sf27qzg8p0w9mhiajh105jh12ay1zdf2wy33v3o4tr65soj6rkq7q568o6n9lnbaimx05te12kw1znb2x7w3vdc4u0q5sy16ru77qel8og39lwvaiwl063612up1zx22xhk3vmx4ua85t7h6s3p7qo68opo9m6eaj6206cl1344206j2xr33vwi4ujw5th86sdi7qy18ozk9mg9ajfv05ie129x1zce2wx03v2g4tps5smy6rj27q3g8o4y9lloailc05rx12ji1zm02x6n3vc24tzc5swj6rsn7qd18oel9lveaiv4061n12t51zvi2xg23vlh4u8v5t656s2e7qmv8oog9m59aj4y06bi132z205c2xpv3vv94uin5tfx6sc47qwi8oxz9mepajee05gy128i1zay2wvi3v0y4toc5slo6rhw7q2c8o3t9lkkaik705qs12id1zks2x5c3vap4ty05sv96rrh7qby8odj9lubaiu1060m12s61zuk2xf33vke4u7o5t4v6s147qln8on99m42aj3p06a6131n20402xoj3vty4uhc5teo6saz7qvl8ox89me2ajdp05g6127m1z9y2wui3uzx4tn95ski6rgo7q158o2q9ljmaijd05py12hh1zjt2x4a3v9l4twv5su36rq97qar8ocd9ltaait405zq12r71zth2xdu3vj34u6e5t3p6s017qkn8omc9m38aj30069m1314203f2xnu3vt34ugb5tdk6s9s7qub8ovx9mcrajch05f1126m1z902wti3uyt4tm25sj96rfg7pzz8o1n9liiaii905ou12gd1zir2x383v8i4tvp5ssu6rp07q9k8ob89ls7ais105yo12q61zsh2xcw3vi54u5c5t2h6rym7qj58okt9m1paj1h068212zj201t2xm83vrj4uev5tc56s8f7qsz8oum9mbhajb805ds125a1z7m2ws23uxd4tkn5shv6re27pyj8o049lgzaigr05nd12ex1zha2x1p3v6x4tu45sra6rni7q818o9p9lqlaiqd05wx12od1zqm2xb03vg84u3g5t0r6rx47qhu8ojm9m0kaj0b066t12y8200g2xks3vq14ud95tai6s6s7qrf8ot59ma3aj9u05cd123s1z602wqd3uvm4tiu5sg36rcc7pwz8nyr9lfraifm05m712do1zfv2x043v594tsf5spn6rlx7q6l8o8e9lphaipg05w512nn1zpt2xa13vf34u265szb6rvk7qg98oi29lz2aiyy065l12x31zzc2xjm3voq4ubv5t926s5e7qq48ory9m8yaj8s05bf122x1z582wpl3uur4thw5sez6rb67pvr8nxj9lelaiei05l712cq1zf22wzf3v4k4trn5soo6rkt7q5e8o769loaaio805uv12mc1zoj2x8t3vdz4u155syc6rum7qfb8oh69ly8aiy5064s12w91zyg2xiq3vnw4ub35t8b6s4k7qp58oqv9m7uaj7p05ac121v1z452woh3utm4tgs5sdz6ra97puv8nwl9ldkaidf05k212bl1zdu2wy43v374tqb5sni6rjt7q4j8o6e9lngainc05ty12lf1znn2x7w3vcy4u015sx76rth7qe88og39lx4aiwx063g12uu1zx02xha3vme4u9k5t6t6s357qnx8opu9m6xaj6s059b120n1z2s2wn13us64tfb5sci6r8s7pth8nvc9lchaicg05j412aj1zco2wwu3v1u4tow5sm06ri97q2y8o4u9lm0aim005sp12k31zm52x683vb54ty65sve6rrt7qco8oen9lvtaivs062f12tu1zvy2xg33vl14u825t586s1k7qmb8oo89m5caj5a057x11zf1z1m2wlt3uqt4tdt5sav6r737prt8ntr9laxaiaw05hl12921zb72wvc3v0b4tna5skc6rgl7q1d8o3d9lknaikq05rg12iw1zl02x543va24tx25su46rqd7qb38od19lu7aiu8060w12sc1zug2xel3vjk4u6m5t3s6s037qku8omr9m3xaj3w056k11y11z062wkd3upd4tcf5s9k6r5t7pqj8nsg9l9lai9l05gc127u1za12wu73uz64tm45sj76rfg7q078o259ljbaija05py12hc1zjg2x3k3v8i4tvi5sso6rp37qa08oc39ltbaita05zv12r71zt92xde3vie4u5g5t2n6rz07qju8olu9m32aj32055o11x11yz42wj83uo74tb85s8d6r4o7ppg8nrh9l8qai8s05fi126w1z8x2wsw3uxr4tkp5shu6re77pz38o179likaiip05ph12gx1zix2x2w3v7o4tul5sro6ro27q8x8ob09ls9aisb05z012qg1zsi2xcj3vhe4u4a5t1d6rxq7qin8okq9m20aj21054p11w41yy82wic3un84ta55s766r3g7poa8nqd9l7oai7s05ej12601z832ws63ux14tjw5sgw6rd37pxv8nzx9lh9aihe05o312fh1zhg2x1g3v6a4tt75sqb6rmo7q7k8o9o9lr1air505xu12p81zr72xb73vg24u315t076rwj7qhc8ojd9m0maj0o053e11uv1ywx2wgy3uls4t8p5s5s6r237pmw8nox9l66ai6805cy124f1z6g2wqf3uv64ti05sf36rbg7pwf8nyl9lfyaig205ms12e61zg52x043v4w4trr5sot6rl77q658o8b9lpoaipq05wc12no1zpm2x9l3vef4u1b5sye6rus7qfq8ohw9lzaaize052211td1yvb2wf93uk24t6z5s416r0d7pl98nng9l4wai5405bw123b1z5a2wp63utw4tgp5sdq6ra17puw8nx29leiaieq05li12cw1zet2wyn3v3b4tq35sn56rjl7q4m8o6v9loaaiog05v712mm1zol2x8h3vd74u015sx46rti7qeg8ogn9ly1aiy6050x11sd1yue2wee3uj64t5z5s2y6qz87pk48nma9l3pai3w05ao12231z422wny3usn4tff5sce6r8q7ptp8nvz9ldiaids05kk12by1zdv2wxr3v2g4tpa5smc6rip7q3n8o5u9lnaainh05u812lm1znj2x7f3vc54tz05sw36rsg7qdf8ofl9lwzaix504zv11ra1yt82wd53uhu4t4o5s1q6qy37pj28nla9l2pai2w059o12141z342wn03urp4teh5sbh6r7u7pst8nv29lcjaicp05je12aq1zcl2wwf3v124tnu5skw6rhc7q2g8o4t9lmcaimi05t512kf1zm82x623var4txm5suq6rr67qc78oej9lw1aiw904yz11qa1ys52wby3ugn4t3f5s0h6qwt7phs8nk29l1mai1w058p12021z1v2wlk3uq14tcp5s9p6r647pr88ntm9lb9aibm05ig129u1zbo2wvc3uzu4tmi5sji6rfy7q128o3f9lkzail805s112je1zla2x523v9l4tw95st76rpl7qan8ocz9lujaius04xk11oy1yqv2wao3uf84t1w5rys6qv37pg38nig9l03ai0g057a11yp1z0m2wkf3up04tbo5s8k6r4u7pps8ns49l9raia405gx12891za32wtt3uyc4tl15si06ree7pzg8o1s9ljeaijp05qi12hu1zjo2x3e3v7z4tur5srt6ro87q998obk9lt2aitc04w511nk1yph2w9a3udv4t0l5rxm6qtz7pez8nh99kysahz1055u11x81yz22wis3un94t9w5s6v6r3a7pog8nqw9l8kai8v05fm126x1z8q2wsf3uwy4tjn5sgo6rd67pyd8o0u9lihaiiq05pf12go1zif2x253v6p4ttf5sqg6rmw7q818oah9ls5aisg04v711mh1yo72w7v3ucd4sz05rw06qsf7pdj8ng19kxsahy8055411wg1yy72wht3um84t8u5s5t6r287pnd8npu9l7lai8005ev12671z7x2wrh3uvu4tie5sfc6rbt7px18nzl9lhbaiho05oi12fv1zhn2x193v5o4tsa5sp96rlo7q6u8o9c9lr2airf04u911ln1ynh2w773ubo4sya5rv66qri7pck8nf19kwrahx6054211vf1yx62wgs3ul64t7p5s4j6r0w7pm18nok9l6eai6v05ds12541z6u2wqf3uut4the5sed6rat7pvz8nyg9lg6aigk05ne12er1zgi2x043v4k4tr75so66rkl7q5p8o849lpsaiq504sz11kc1ym52w5r3ua54swp5rtl6qq07pb48ndm9kvcahvr052m11u01yvt2wff3uju4t6d5s3a6qzq7pkw8nnf9l56ai5k05cc123m1z5b2wov3ut94tft5scr6r987puh8nx39levaif805lz12d71zeu2wye3v2s4tpf5smf6riv7q438o6o9lohaiow04rp11iz1yko2w483u8m4sv85rs76qom7p9s8ncb9ku5ahum051j11su1yuh2wdw3ui34t4j5s1f6qxw7pj68nlt9l3pai4805b5122h1z442wnj3urr4te85sb56r7p7pt18nvo9ldiaidy05ks12c31zdt2wxc3v1n4to55sl26rhi7q2r8o5d9ln8aino04qh11hs1yji2w313u7b4stq5rqk6qmx7p848nas9kspaht9050711rj1yt72wcq3uh14t3i5s0d6qwr7phz8nkn9l2kai3405a1121b1z2x2wmc3uqm4td35sa06r6h7prq8nud9lc9aicr05jn12ay1zck2ww03v0a4tms5sjr6rg87q1h8o439llxaime04pb11go1yie2w1x3u684ssq5rpo6qm57p7d8n9z9krtahsb04z711qj1ys62wbm3uft4t265rz16qvi7pgu8njl9l1jai22058x12071z1s2wl73upf4tbv5s8s6r5c7pqq8nti9lbfaibx05iq129y1zbj2wuz3uz94tlr5sip6rf77q0i8o389ll6ailq04ol11ft1yhe2w0r3u4x4srb5ro56qkl7p5v8n8l9kqmahr904y911pl1yr72waj3uen4t0z5rxu6quc7pfp8nig9l0gai12058011zb1z0v2wk73uob4tan5s7i6r3z7ppd8ns59la4aiao05hl128v1zah2wtu3uy04tkc5sh66rdm7pyx8o1o9ljoaik804n511eg1yg42vzl3u3t4sq75rn16qjg7p4p8n7f9kpfahq104wz11oa1ypu2w963uda4szm5rwd6qss7pe38ngv9kyxahzl056k11xu1yzd2wio3umr4t945s606r2j7pnw8nqo9l8nai9705g4127e1z8y2wsb3uwh4tix5sfu6rcd7pxp8o0f9licaiiw04ls11d21yeo2vy13u244sof5rl86qho7p318n5t9kntahog04ve11mo1yo92w7k3ubn4sxz5rut6qrc7pcs8nfo9kxqahyb055611wc1yxt2wh33ul74t7k5s4g6r107pmh8npe9l7hai8305ey12641z7k2wqs3uuv4th85se46ram7pw18nyw9lh0aihp04kn11bw1ydd2vwn3u0p4sn25rjy6qgh7p1v8n4q9kmuahnl04um11lx1ynd2w6j3uag4swn5rtf6qpx7pbf8nec9kwiahx9054b11vm1yx32wg93uk64t6d5s366qzq7pl98no79l6bai7005dy12581z6s2wq23uu44tgf5sd86r9q7pv68ny29lg7aigv04ju11b41ycn2vvy3tzz4sm55riu6qf77p0k8n3g9klnahmf04th11ks1ymb2w5k3u9k4svs5rsk6qp07paf8ndc9kviahw9053911uh1yvy2wf63uj64t5h5s2c6qyv7pkb8nn69l5aai5z05cy12471z5o2wov3usv4tf55sbz6r8h7ptw8nwq9lesaifg04if119q1yba2vuk3tyl4skv5rhq6qe97ozq8n2m9kkpahld04sc11jk1yl12w473u844suc5rr46qnn7p968nc79kueahv4052011t61yuk2wdo3uhl4t3t5s0n6qx87pit8nlu9l42ai4r05bm122r1z442wna3ur94tdl5sag6r727psl8nvl9ldtaiel04hj118p1ya22vt43twz4sj45rfu6qcc7oxt8n0t9kj4ahjz04r111ib1yjp2w2q3u6i4ssl5rpc6qlw7p7h8nak9ksvahto050p11rx1ytb2wcd3ug64t2b5rz36qvo7ph98nkc9l2nai3f05ae121l1z302wm33upy4tc25s8q6r577pqp8ntq9lc0aicu04fv11751y8l2vrr3tvo4sht5rej6qb07owi8mzj9khuahiq04pt11h11yif2w1h3u5a4sre5ro36qkk7p638n969krjahsf04zh11qq1ys32wb33uew4t0z5rxr6qub7pfv8niw9l16ai1z059012091z1o2wks3uoo4tav5s7p6r4b7ppv8nsv9lb4aibw04ew11661y7m2vqp3tuj4sgl5rda6q9s7ovb8myd9kgoahhi04ok11ft1yh82w0b3u444sq65rmv6qjg7p538n899kqmahrf04yd11pi1yqt2w9v3udq4szw5rwq6qtc7pf08ni69l0kai1d058c11zg1z0q2wjp3unj4t9p5s6g6r2z7poj8nrn9la0aiaw04dy11551y6h2vph3tt94sfe5rc66q8r7oud8mxh9kfvahgs04nw11f41yge2vzb3u2z4soz5rlp6qib7p3z8n769kpmahqj04xm11ou1yq52w923ucp4syn5rvc6qry7pdm8ngt9kz8ai03057311ya1yzm2win3umf4t8h5s586r1s7png8nqm9l91ai9x04cy11451y5h2voh3ts74se75ras6q787oss8mvy9kefahff04mj11ds1yf32vy03u1o4snm5rk96qgr7p2e8n5l9ko2ahp004w211n81yoi2w7e3ub44sx75rtz6qql7pc98nff9kxuahyq055s11wz1yya2wh73ukw4t6x5s3m6r057plq8nou9l77ai83";
+window.__LUNAR__="000084ia00ao01g200ki02w500ud54ei0150018r01eu023f01op447q01zd012i0297028p02j224lu02tq01g2033k65d103e8027903o2021703xw542z048k00j104ie012j04s92295052x02p505cs75ua05ng02vm05xa02lh0674557106hs021i06rm00ja071g44ad07c501ck07lz02w907vu261e086i02vm08gc62li08qz010r090t021j09ao53p209lc028q09v701ck0a5132x50afp01ft0apj74gj0b0702370ba1010r0bjv621n0buj023x0c4e012i0ce845ed0cox02as0cyr02890d8l258z0dj902390dt3746l0e3r01120edl023x0eng54a20ey4014i0f7y02p10fht35sa0fsh02mi0g2b82390gcy023b0gmt011y0gwn62450h7b02510hh601ci0hr042w50i1o02w50ibj018q0ilc32hj0iw0023f0j5v747u0jgj012i0jqd02950k0854lu0kaw028i0kkq02790kuk44ej0l5802170lf2842z0lpq00j10lzk012l0m9f62950mk302p50mty02oi0n3s45r90neg02lh0noaa5710nyy021i0o8s00ja0oim614l0ota01cl0p3502w90pd0561e0pno02vm0pxi02li0q7c321i0qhz021j0qru84460r2i00nu0rcc01cl0rm754i10rwv01ft0s6p01ar0sgj446j0sr7010r0t11021n0taw247u0tlk012i0tve75ed0u6302as0ufx02890upr558z0v0f02390va9010t0vk3423x0vur02450w4m94a20wfa015e0wp402p10wyz65sa0x9n02mi0xjh02hh0xtb446m0y3z011y0ydt02450yno24aa0yyc01ci0z8662w50ziu01et0zso018r102i52hj10d602i310n1012210wv3252117j029511heb4lu11s2028i121w027912bq656z12me021712w800x71362512313gq014d13ql0296140g25ea14b402oi14ky75r914vm02lh155g021h15fa543115py00xi15zs014l169n32p616kb02x516u6861e174u02vm17eo02li17oi621i17z5021j1890011y18iu41cl18ti01g5193d01ft19d732vn19nv01ar19xp746j1a8d010r1ai7021n1as2547u1b2q012i1bck02911bmf44lm1bx3028a1c6x85911chl02391crf010t1d19623x1dbx02451dls014a1dvm42at1e6a02p11eg502mi1epz35n91f0n02hi1fah74zy1fl5011y1fuz02451g4u54aa1gfi01ci1gpc02w51gz742tm1h9u01aj1hjo82hj1huc00x71i4601231ie162521iop02961iyk01g21j8e44kl1jj202851jsw022z1k2q242j1kde00x7";
+window.__DAY0__=49;
+window.__GUA__={"gua64":{"111111":"乾为天","110111":"天泽履","101111":"天火同人","100111":"天雷无妄","011111":"天风姤","010111":"天水讼","001111":"天山遁","000111":"天地否","111110":"泽天夬","110110":"兑为泽","101110":"泽火革","100110":"泽雷随","011110":"泽风大过","010110":"泽水困","001110":"泽山咸","000110":"泽地萃","111101":"火天大有","110101":"火泽睽","101101":"离为火","100101":"火雷噬嗑","011101":"火风鼎","010101":"火水未济","001101":"火山旅","000101":"火地晋","111100":"雷天大壮","110100":"雷泽归妹","101100":"雷火丰","100100":"震为雷","011100":"雷风恒","010100":"雷水解","001100":"雷山小过","000100":"雷地豫","111011":"风天小畜","110011":"风泽中孚","101011":"风火家人","100011":"风雷益","011011":"巽为风","010011":"风水涣","001011":"风山渐","000011":"风地观","111010":"水天需","110010":"水泽节","101010":"水火既济","100010":"水雷屯","011010":"水风井","010010":"坎为水","001010":"水山蹇","000010":"水地比","111001":"山天大畜","110001":"山泽损","101001":"山火贲","100001":"山雷颐","011001":"山风蛊","010001":"山水蒙","001001":"艮为山","000001":"山地剥","111000":"地天泰","110000":"地泽临","101000":"地火明夷","100000":"地雷复","011000":"地风升","010000":"地水师","001000":"地山谦","000000":"坤为地"},"gong":{"乾":["乾为天","天风姤","天山遁","天地否","风地观","山地剥","火地晋","火天大有"],"坎":["坎为水","水泽节","水雷屯","水火既济","泽火革","雷火丰","地火明夷","地水师"],"艮":["艮为山","山火贲","山天大畜","山泽损","火泽睽","天泽履","风泽中孚","风山渐"],"震":["震为雷","雷地豫","雷水解","雷风恒","地风升","水风井","泽风大过","泽雷随"],"巽":["巽为风","风天小畜","风火家人","风雷益","天雷无妄","火雷噬嗑","山雷颐","山风蛊"],"离":["离为火","火山旅","火风鼎","火水未济","山水蒙","风水涣","天水讼","天火同人"],"坤":["坤为地","地雷复","地泽临","地天泰","雷天大壮","泽天夬","水天需","水地比"],"兑":["兑为泽","泽水困","泽地萃","泽山咸","水山蹇","地山谦","雷山小过","雷泽归妹"]},"najia":{"乾":[["甲","子"],["甲","寅"],["甲","辰"],["壬","午"],["壬","申"],["壬","戌"]],"坤":[["乙","未"],["乙","巳"],["乙","卯"],["癸","丑"],["癸","亥"],["癸","酉"]],"震":[["庚","子"],["庚","寅"],["庚","辰"],["庚","午"],["庚","申"],["庚","戌"]],"巽":[["辛","丑"],["辛","亥"],["辛","酉"],["辛","未"],["辛","巳"],["辛","卯"]],"坎":[["戊","寅"],["戊","辰"],["戊","午"],["戊","申"],["戊","戌"],["戊","子"]],"离":[["己","卯"],["己","丑"],["己","亥"],["己","酉"],["己","未"],["己","巳"]],"艮":[["丙","辰"],["丙","午"],["丙","申"],["丙","戌"],["丙","子"],["丙","寅"]],"兑":[["丁","巳"],["丁","卯"],["丁","丑"],["丁","亥"],["丁","酉"],["丁","未"]]},"gongWx":{"乾":"金","兑":"金","离":"火","震":"木","巽":"木","坎":"水","艮":"土","坤":"土"},"shi":[6,1,2,3,4,5,4,3],"liuhe":["地天泰","地雷复","天地否","山泽损","水泽节","泽山咸","泽水困","雷地豫"],"liuchong":["乾为天","兑为泽","坎为水","坤为地","天雷无妄","巽为风","离为火","艮为山","雷天大壮","震为雷"],"liuqinOrder":["父母","兄弟","子孙","妻财","官鬼"],"liushen":["青龙","朱雀","勾陈","螣蛇","白虎","玄武"],"zhiWx":{"子":"水","丑":"土","寅":"木","卯":"木","辰":"土","巳":"火","午":"火","未":"土","申":"金","酉":"金","戌":"土","亥":"水"},"ganWx":{"甲":"木","乙":"木","丙":"火","丁":"火","戊":"土","己":"土","庚":"金","辛":"金","壬":"水","癸":"水"}};
+window.__SHEN__={"sanhe":{"申":["寅","酉","子","戌","巳","午","辰"],"子":["寅","酉","子","戌","巳","午","辰"],"辰":["寅","酉","子","戌","巳","午","辰"],"寅":["申","卯","午","辰","亥","子","戌"],"午":["申","卯","午","辰","亥","子","戌"],"戌":["申","卯","午","辰","亥","子","戌"],"亥":["巳","子","卯","丑","申","酉","未"],"卯":["巳","子","卯","丑","申","酉","未"],"未":["巳","子","卯","丑","申","酉","未"],"巳":["亥","午","酉","未","寅","卯","丑"],"酉":["亥","午","酉","未","寅","卯","丑"],"丑":["亥","午","酉","未","寅","卯","丑"]},"lu":{"甲":"寅","乙":"卯","丙":"巳","丁":"午","戊":"巳","己":"午","庚":"申","辛":"酉","壬":"亥","癸":"子"},"ren":{"甲":"卯","乙":"寅","丙":"午","丁":"巳","戊":"午","己":"巳","庚":"酉","辛":"申","壬":"子","癸":"亥"},"wenchang":{"甲":"巳","乙":"午","丙":"申","丁":"酉","戊":"申","己":"酉","庚":"亥","辛":"子","壬":"寅","癸":"卯"},"guiren":{"甲":["丑","未"],"戊":["丑","未"],"庚":["丑","未"],"乙":["子","申"],"己":["子","申"],"丙":["亥","酉"],"丁":["亥","酉"],"辛":["午","寅"],"壬":["卯","巳"],"癸":["卯","巳"]},"ride":{"甲":"寅","己":"寅","乙":"申","庚":"申","丙":"巳","辛":"巳","丁":"亥","壬":"亥","戊":"巳","癸":"巳"},"tianma":{"寅":"午","卯":"申","辰":"戌","巳":"子","午":"寅","未":"辰","申":"午","酉":"申","戌":"戌","亥":"子","子":"寅","丑":"辰"},"order":["驿马","桃花","日禄","贵人","文昌","羊刃","将星","谋星","劫煞","灾煞","华盖","日德","天马","天医"]};
+</script><script>window.__INIT__={"name": "", "gender": "男", "question": "", "cal": "solar", "y": 2026, "m": 11, "d": 3, "h": 20, "i": 36, "leap": false, "lateZi": true, "yao": [7, 7, 7, 7, 7, 7], "mode": "manual", "live": true};</script><script>
+(function(){
+"use strict";
+var GAN="甲乙丙丁戊己庚辛壬癸", ZHI="子丑寅卯辰巳午未申酉戌亥";
+var Y0=1900;
+var D=window.__GUA__, S=window.__SHEN__, JIE=window.__JIE__, LUNAR=window.__LUNAR__, DAY0=window.__DAY0__;
+var BITS2={"111":"乾","110":"兑","101":"离","100":"震","011":"巽","010":"坎","001":"艮","000":"坤"};
+var SHENG={"木":"火","火":"土","土":"金","金":"水","水":"木"};
+var KE={"木":"土","土":"水","水":"火","火":"金","金":"木"};
+var BAR_YANG="───", BAR_YIN="─　─", GUATAGS=["六合","六冲","游魂","归魂"];   // 八纯不括，与 render.py 同步
+
+function b36(s){var n=0;for(var i=0;i<s.length;i++){n=n*36+parseInt(s.charAt(i),36);}return n;}
+function isLeap(y){return y%4===0&&(y%100!==0||y%400===0);}
+var MD=[31,28,31,30,31,30,31,31,30,31,30,31];
+function jdn(y,m,d){var a=Math.floor((14-m)/12),yy=y+4800-a,mm=m+12*a-3;
+  return d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;}
+function fromJdn(n){var a=n+32044,b=Math.floor((4*a+3)/146097),c=a-Math.floor(146097*b/4),
+  d=Math.floor((4*c+3)/1461),e=c-Math.floor(1461*d/4),m=Math.floor((5*e+2)/153);
+  var day=e-Math.floor((153*m+2)/5)+1, mon=m+3-12*Math.floor(m/10), yr=100*b+d-4800+Math.floor(m/10);
+  return [yr,mon,day];}
+function doy(y,m,d){var n=d;for(var i=0;i<m-1;i++){n+=MD[i];}if(m>2&&isLeap(y)){n++;}return n;}
+function jieMin(y,i){var p=((y-Y0)*12+i)*4;return b36(JIE.substr(p,4));}
+
+/* ---------------- 历法 ---------------- */
+function pillars(y,m,d,h,mi,lateZi){
+  /* 历法表覆盖 1900–2100（与页面年份下拉、Python 端同期）；越界即报错，
+     不许拿空表算出一组像真一样的干支（指令 89） */
+  if(!(y>=Y0&&y<=Y0+200)){throw new Error("公元 "+y+" 年超出可排范围（1900–2100）");}
+  var di=((jdn(y,m,d)+DAY0)%60+60)%60, day=GAN.charAt(di%10)+ZHI.charAt(di%12);
+  if(lateZi&&h>=23){di=(di+1)%60;day=GAN.charAt(di%10)+ZHI.charAt(di%12);}
+  var now=(doy(y,m,d)-1)*1440+h*60+mi;
+  var yb=y;
+  if(now<jieMin(y,1)){yb=y-1;}                      /* 未过立春，属上一年 */
+  var yi=((yb-4)%60+60)%60, year=GAN.charAt(yi%10)+ZHI.charAt(yi%12);
+  var i=11;                                          /* 早于小寒者，承上年大雪，子月 */
+  if(now>=jieMin(y,0)){for(var k=11;k>=0;k--){if(now>=jieMin(y,k)){i=k;break;}}}
+  var mz=(i+1)%12;
+  var yinGan=((yi%10)%5)*2+2, kk=(mz-2+12)%12, mGan=(yinGan+kk)%10;
+  var month=GAN.charAt(mGan)+ZHI.charAt(mz);
+  var hz=Math.floor((h+1)/2)%12, hg=(GAN.indexOf(day.charAt(0))*2+hz)%10;
+  var hour=GAN.charAt(hg)+ZHI.charAt(hz);
+  var head=di-di%10;
+  var kong=[ZHI.charAt((head+10)%12),ZHI.charAt((head+11)%12)];
+  return {year:year,month:month,day:day,hour:hour,dayIndex:di,kong:kong,
+          monthZhi:ZHI.charAt(mz),hourZhi:ZHI.charAt(hz)};
+}
+
+/* ---------------- 农历 ---------------- */
+function lunarYearRec(ly){var p=(ly-Y0)*8;return LUNAR.substr(p,8);}
+function cnyOffset(ly){return b36(lunarYearRec(ly).substr(0,4));}
+function lunarSeq(leap){var a=[];for(var m=1;m<=12;m++){a.push({m:m,leap:false});if(leap===m){a.push({m:m,leap:true});}}return a;}
+function monthLenAt(rec,i){var mask=b36(rec.substr(5,3));return ((mask>>i)&1)?30:29;}
+function lunarLeapOf(ly){return b36(lunarYearRec(ly).substr(4,1));}
+/* 该年该月（含闰）实有天数：小月 29、大月 30。指令 89：日下拉须按此收口，
+   否则选「三十」会静默跨到下月初一 */
+function lunarMonthLen(ly,lm,isLeap){
+  var rec=lunarYearRec(ly), seq=lunarSeq(lunarLeapOf(ly)),  i;
+  for(i=0;i<seq.length;i++){
+    if(seq[i].m===lm&&seq[i].leap===!!isLeap){return monthLenAt(rec,i);}
+  }
+  return 29;
+}
+function lunarToSolar(ly,lm,ld,isLeap){
+  var rec=lunarYearRec(ly), leap=lunarLeapOf(ly), mask=b36(rec.substr(5,3));
+  var seq=lunarSeq(leap), days=cnyOffset(ly), i, hit=-1;
+  var want=!!isLeap;
+  /* 该年无此闰月时按本月算——不再把十二个月全累加、静默跨到次年 */
+  if(want&&leap!==lm){want=false;}
+  for(i=0;i<seq.length;i++){if(seq[i].m===lm&&seq[i].leap===want){hit=i;break;}}
+  if(hit<0){hit=0;}
+  for(i=0;i<hit;i++){days+=((mask>>i)&1)?30:29;}
+  var len=((mask>>hit)&1)?30:29;
+  /* 越界日一律落到本月底，绝不跨月（Python 端对不存在的日期直接报错） */
+  days+=Math.max(0,Math.min(len,ld)-1);
+  var j=jdn(1900,1,31)+days, t=fromJdn(j);
+  return [t[0],t[1],t[2]];
+}
+function solarToLunar(y,m,d){
+  var base=jdn(1900,1,31), days=jdn(y,m,d)-base, ly=Y0;
+  var top=Y0+200;
+  while(ly<top&&cnyOffset(ly+1)<=days){ly++;}
+  var rec=lunarYearRec(ly), leap=b36(rec.substr(4,1)), seq=lunarSeq(leap);
+  var rest=days-cnyOffset(ly), i=0;
+  while(i<seq.length&&rest>=monthLenAt(rec,i)){rest-=monthLenAt(rec,i);i++;}
+  if(i>=seq.length){i=seq.length-1;}
+  return {y:ly,m:seq[i].m,d:rest+1,leap:seq[i].leap,months:seq};
+}
+
+/* ---------------- 卦理 ---------------- */
+function liuqin(gwx,ywx){
+  if(gwx===ywx){return "兄弟";}
+  if(SHENG[ywx]===gwx){return "父母";}
+  if(SHENG[gwx]===ywx){return "子孙";}
+  if(KE[ywx]===gwx){return "官鬼";}
+  return "妻财";
+}
+function liushen0(dayGan){return {"甲":0,"乙":0,"丙":1,"丁":1,"戊":2,"己":3,"庚":4,"辛":4,"壬":5,"癸":5}[dayGan];}
+function najiaOf(bits){
+  var lo=BITS2[bits.slice(0,3).join("")], up=BITS2[bits.slice(3).join("")], out=[];
+  for(var i=0;i<6;i++){var g=(i<3)?lo:up;out.push(D.najia[g][i]);}
+  return {najia:out,upper:up,lower:lo};
+}
+function build(bits,moving,dayGan,gwxOverride){
+  var na=najiaOf(bits), name=D.gua64[bits.join("")];
+  var gong=null, names;
+  for(var g in D.gong){if(D.gong[g].indexOf(name)>=0){gong=g;break;}}
+  var gwx=gwxOverride||D.gongWx[gong], idx=D.gong[gong].indexOf(name), shi=D.shi[idx];
+  var ying=(shi<=3)?shi+3:shi-3, ls0=liushen0(dayGan), rows=[];
+  for(var i=0;i<6;i++){
+    var gan=na.najia[i][0], zhi=na.najia[i][1], wx=D.zhiWx[zhi];
+    rows.push({pos:i+1,yin:bits[i]===0,moving:!!(moving&&moving[i]),
+      liuqin:liuqin(gwx,wx),gan:gan,zhi:zhi,wx:wx,
+      liushen:D.liushen[(ls0+i)%6],shi:(i+1)===shi,ying:(i+1)===ying,kong:false});
+  }
+  var tags=[];
+  if(idx===0){tags.push("八纯");}else if(idx===6){tags.push("游魂");}else if(idx===7){tags.push("归魂");}
+  if(D.liuhe.indexOf(name)>=0){tags.push("六合");}
+  if(D.liuchong.indexOf(name)>=0){tags.push("六冲");}
+  return {name:name,upper:na.upper,lower:na.lower,gong:gong,gongWx:D.gongWx[gong],
+    shi:shi,ying:ying,tags:tags,lines:rows,bits:bits.slice()};
+}
+function addFushen(pri){
+  var have={},miss=[],i;
+  for(i=0;i<6;i++){have[pri.lines[i].liuqin]=1;}
+  for(i=0;i<D.liuqinOrder.length;i++){if(!have[D.liuqinOrder[i]]){miss.push(D.liuqinOrder[i]);}}
+  if(!miss.length){return;}
+  var first=D.gong[pri.gong][0], key=null;
+  for(var k in D.gua64){if(D.gua64[k]===first){key=k;break;}}
+  var bits=key.split("").map(Number), na=najiaOf(bits), gwx=D.gongWx[pri.gong], used={};
+  for(i=0;i<6;i++){
+    var gan=na.najia[i][0], zhi=na.najia[i][1], q=liuqin(gwx,D.zhiWx[zhi]);
+    if(miss.indexOf(q)>=0&&!used[q]){used[q]=1;
+      pri.lines[i].fushen={liuqin:q,gan:gan,zhi:zhi,wx:D.zhiWx[zhi]};}
+  }
+}
+function bian(pri){
+  var any=false,i;
+  for(i=0;i<6;i++){if(pri.lines[i].moving){any=true;}}
+  if(!any){return null;}
+  var bits=[];
+  for(i=0;i<6;i++){var b=pri.lines[i].yin?0:1;if(pri.lines[i].moving){b=1-b;}bits.push(b);}
+  var ch=build(bits,null,"甲",pri.gongWx);
+  for(i=0;i<6;i++){ch.lines[i].liushen="";}
+  return ch;
+}
+function markKong(h,kong){
+  for(var i=0;i<6;i++){h.lines[i].kong=kong.indexOf(h.lines[i].zhi)>=0;}
+}
+
+/* ---------------- 神煞 ---------------- */
+function shensha(dg,dz,mz){
+  var s=S.sanhe[dz], o={
+    "驿马":[s[0]],"桃花":[s[1]],"日禄":[S.lu[dg]],"贵人":S.guiren[dg].slice(),
+    "文昌":[S.wenchang[dg]],"羊刃":[S.ren[dg]],"将星":[s[2]],"谋星":[s[3]],
+    "劫煞":[s[4]],"灾煞":[s[5]],"华盖":[s[6]],"日德":[S.ride[dg]],
+    "天马":[S.tianma[mz]],"天医":[ZHI.charAt((ZHI.indexOf(mz)-1+12)%12)]
+  };
+  return S.order.map(function(n){return [n,o[n]];});
+}
+
+/* ---------------- 渲染（与 Python 逐字一致） ---------------- */
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function bar(l){return l.yin?BAR_YIN:BAR_YANG;}
+function guatitle(ch){
+  var t=[];for(var i=0;i<ch.tags.length;i++){if(GUATAGS.indexOf(ch.tags[i])>=0){t.push(ch.tags[i]);}}
+  return esc(ch.gong)+"宫："+esc(ch.name)+(t.length?'<span class="tag">（'+esc(t.join("、"))+'）</span>':"");
+}
+function qinCell(l){
+  return '<td class="qin">'+esc(l.liuqin)+esc(l.gan)+esc(l.zhi)+esc(l.wx)+"</td>";
+}
+function rowHTML(l,b){
+  var cells=[];
+  cells.push('<td class="liushen">'+esc(l.liushen)+"</td>");
+  cells.push(l.fushen?('<td class="fush">'+qinCell(l.fushen).replace('<td class="qin">',"").replace("</td>","")+"</td>"):'<td class="fush"></td>');
+  cells.push(qinCell(l));
+  cells.push('<td class="yao '+(l.yin?"y0":"y1")+'">'+bar(l)+"</td>");
+  cells.push('<td class="sy">'+(l.shi?"世":(l.ying?"应":""))+"</td>");
+  cells.push('<td class="dong">'+(l.moving?((l.yin?"×":"○")+"→"):"")+"</td>");
+  if(b){
+    cells.push(qinCell(b));
+    cells.push('<td class="yao '+(b.yin?"y0":"y1")+'">'+bar(b)+"</td>");
+    cells.push('<td class="sy">'+(b.shi?"世":(b.ying?"应":""))+"</td>");
+  }
+  return "<tr>"+cells.join("")+"</tr>";
+}
+function boardHTML(pri,ch){
+  var rows=[],i,rev=[];
+  for(i=5;i>=0;i--){rev.push(i);}
+  var body="";
+  for(i=0;i<6;i++){body+=rowHTML(pri.lines[rev[i]], ch?ch.lines[rev[i]]:null);}
+  var thead;
+  if(ch){
+    thead='<tr><th colspan="6" class="gname gmain">'+guatitle(pri)+'</th><th colspan="3" class="gname gsub">'+guatitle(ch)+"</th></tr>";
+  }else{
+    thead='<tr><th colspan="6" class="gname gmain">'+guatitle(pri)+"</th></tr>";
+  }
+  var cls=ch?"board":"board six";
+  var cols=ch
+    ?'<colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4">'
+      +'<col class="c5"><col class="c6"><col class="c7"><col class="c8"><col class="c9"></colgroup>'
+    :'<colgroup><col class="c1"><col class="c2"><col class="c3">'
+      +'<col class="c4"><col class="c5"><col class="c6"></colgroup>';
+  return '<table class="'+cls+'">'+cols
+    +"<thead>"+thead+"</thead><tbody>"+body+"</tbody></table>";
+}
+function headHTML(st,p,ss){
+  var who=[];
+  if(st.name){who.push("姓名："+esc(st.name));}
+  var g=st.gender?esc(st.gender)+"测":"";
+  if(g){who.push(g+(st.question?("："+esc(st.question)):""));}
+  else if(st.question){who.push(esc(st.question));}
+  /* 用「无边框表格」承载信息区：Word 粘贴时表格逐行紧贴、不套段落「段后距」（指令 76/79/81） */
+  var rows=[];
+  if(who.length){rows.push('<tr><td><span class="ask">'+who.join(" ")+'</span></td></tr>');}
+  rows.push('<tr><td><span class="meta">公历：'+esc(st.solarText)+'</span></td></tr>');
+  rows.push('<tr><td><span class="meta">干支：'+esc(p.year)+"年 "+esc(p.month)+"月 "+esc(p.day)+"日 "+esc(p.hour)+"时"
+    +'<span class="kong">　（旬空：'+esc(p.kong.join(""))+"）</span></span></td></tr>");
+  var items=ss.map(function(x){return '<span>'+esc(x[0])+"-"+esc(x[1].join("，"))+"</span>";}).join(" ");
+  rows.push('<tr><td class="shenrow"><span class="shen"><span class="lab">神煞：</span>'+items+"</span></td></tr>");
+  return '<table class="headtbl"><tbody>'+rows.join("")+"</tbody></table>";
+}
+
+/* ---------------- 计算总入口 ---------------- */
+function computeJava(st){
+  var sy=st.y,sm=st.m,sd=st.d;
+  try{
+    if(st.cal==="lunar"){var t=lunarToSolar(st.y,st.m,st.d,st.leap);sy=t[0];sm=t[1];sd=t[2];}
+    var p=pillars(sy,sm,sd,st.h,st.i,st.lateZi!==false);
+  }catch(e){
+    return {head:'<table class="headtbl"><tbody><tr><td><span class="meta">'+esc(e.message)
+              +"</span></td></tr></tbody></table>",
+            board:"", solar:"", err:String(e.message)};
+  }
+  var yao=st.yao;
+  var bits=[],mov=[];
+  for(var i=0;i<6;i++){bits.push((yao[i]===7||yao[i]===9)?1:0);mov.push(yao[i]===6||yao[i]===9);}
+  var pri=build(bits,mov,p.day.charAt(0));
+  addFushen(pri);markKong(pri,p.kong);
+  var ch=bian(pri);if(ch){markKong(ch,p.kong);}
+  var ss=shensha(p.day.charAt(0),p.day.charAt(1),p.monthZhi);
+  var solarText=sy+"年"+sm+"月"+sd+"日 "+st.h+"时"+st.i+"分";
+  var stt={name:st.name,gender:st.gender,question:st.question,solarText:solarText};
+  return {head:headHTML(stt,p,ss),board:boardHTML(pri,ch),
+          solar:[sy,sm,sd].map(pad).join("-")+" "+pad(st.h)+":"+pad(st.i),
+          pillars:p,primary:pri,changed:ch,shensha:ss};
+}
+function pad(n){return (n<10?"0":"")+n;}
+window.__pani={compute:computeJava,pillars:pillars,solarToLunar:solarToLunar,lunarToSolar:lunarToSolar,
+               lunarMonthLen:lunarMonthLen,lunarLeapOf:lunarLeapOf,lunarSeq:lunarSeq};
+})();
+</script><script>
+(function(){
+"use strict";
+var ZHI="子丑寅卯辰巳午未申酉戌亥";
+var LMN=["正月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","腊月"];
+var YAOOPT=[["无背 老阴",6],["一个背 少阳",7],["两个背 少阴",8],["三个背 老阳",9]];
+var $=function(id){return document.getElementById(id);};
+function pad(n){return (n<10?"0":"")+n;}
+
+function dName(n){
+  var a="初一初二初三初四初五初六初七初八初九初十十一十二十三十四十五十六十七十八十九二十廿一廿二廿三廿四廿五廿六廿七廿八廿九三十";
+  return a.substr((n-1)*2,2);
+}
+function fill(el,items,sel){
+  var h="";
+  for(var i=0;i<items.length;i++){
+    var v=items[i][0], t=items[i][1];
+    h+='<option value="'+v+'"'+(String(v)===String(sel)?" selected":"")+">"+t+"</option>";
+  }
+  el.innerHTML=h;
+}
+/* 时间组只占一行：单位并入选项文本（2026年 / 11月 / 1日 / 0-子时 / 46分），
+   不再另设「年」「月」等字位，窄屏才排得下 */
+function years(){var a=[];for(var y=1900;y<=2100;y++){a.push([y,y+"年"]);}return a;}
+function monthsSolar(){var a=[];for(var m=1;m<=12;m++){a.push([m,m+"月"]);}return a;}
+/* 公历日下拉按该年该月实有天数收口：不再留下「2月30日」这类不存在的日期
+   —— 旧版 jdn() 会把它们静默滚到下月初（指令 89） */
+function daysSolar(y,m){
+  m=+m; if(!(m>=1&&m<=12)){m=1;}
+  var leap=(y%4===0&&(y%100!==0||y%400===0)), n=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31][m-1], a=[];
+  for(var d=1;d<=n;d++){a.push([d,d+"日"]);}return a;
+}
+function hours(){var a=[];for(var h=0;h<24;h++){a.push([h,h+"-"+ZHI.charAt(Math.floor((h+1)/2)%12)+"时"]);}return a;}
+function minutes(){var a=[];for(var i=0;i<60;i++){a.push([i,i+"分"]);}return a;}
+function monthsLunar(y){
+  var rec=window.__LUNAR__.substr((y-1900)*8,8), leap=parseInt(rec.charAt(4),36), a=[];
+  for(var m=1;m<=12;m++){a.push(["0-"+m,LMN[m-1]]);if(leap===m){a.push(["1-"+m,"闰"+LMN[m-1]]);}}
+  return a;
+}
+/* 农历日下拉按该月实有天数（小月 29、大月 30）收口，闰月另计 */
+function daysLunar(y,m,leap){
+  var n=window.__pani.lunarMonthLen(y,+m,!!leap), a=[];
+  for(var d=1;d<=n;d++){a.push([d,dName(d)]);}return a;
+}
+
+var ST={};
+function readState(){
+  ST.name=$("f-name").value.trim();
+  ST.gender=$("f-gender").value;
+  ST.question=$("f-q").value.trim();
+  var mode=document.querySelector('input[name=mode]:checked').value;
+  ST.cal=document.querySelector('input[name=cal]:checked').value;
+  ST.mode=mode;
+  if(ST.cal==="solar"){ST.y=+$("f-y").value||1900;ST.m=+$("f-m").value||1;ST.d=+$("f-d").value||1;ST.leap=false;}
+  else{var mm=String($("f-m").value).split("-");ST.leap=(mm[0]==="1");ST.m=+(mm[1]||mm[0])||1;ST.y=+$("f-y").value||1900;ST.d=+$("f-d").value||1;}
+  ST.h=+$("f-h").value;ST.i=+$("f-i").value;
+  ST.yao=[+$("y1").value,+$("y2").value,+$("y3").value,+$("y4").value,+$("y5").value,+$("y6").value];
+}
+/* 掷钱：一枚钱背记 1、字记 0，三枚一爻，累加得 0–3 背。
+   0背老阴 6、1背少阳 7、2背少阴 8、3背老阳 9 —— 概率 1/8、3/8、3/8、1/8，
+   这是摇卦本身的分布，不是四选一的均匀随机。 */
+function flip(){
+  if(window.crypto&&crypto.getRandomValues){
+    var a=new Uint8Array(1); crypto.getRandomValues(a); return (a[0]>>7)&1;
+  }
+  return Math.random()<0.5?1:0;
+}
+function tossLine(){ return [6,7,8,9][flip()+flip()+flip()]; }   /* 一爻：掷三枚 */
+function tossAll(){                                              /* 六爻：自初爻至上爻，一爻一爻排 */
+  var v=[];
+  for(var i=0;i<6;i++){v.push(tossLine());}
+  return v;
+}
+function fitFont(){          /* 字号随宽度收窄（指令 61/64）：以盘面元素**实测宽度**直算，
+  内联样式直写——不依赖 cqw/vw/min/calc 任何 CSS 特性，任何内核必然生效；
+  宽度取自盘面本身（getBoundingClientRect），内距是多少都无关 */
+  var pan=document.querySelector(".pan");if(!pan)return;
+  var pb=$("pan-board");if(!pb)return;
+  var bw=pb.getBoundingClientRect().width;if(bw<=0)return;
+  var bd=pb.querySelector(".board");
+  var six=bd?bd.classList.contains("six"):pan.classList.contains("sixpage");
+  var f=Math.min(15,bw/(six?21.2:36.667));
+  pb.style.fontSize=f.toFixed(3)+"px";
+  var ph=$("pan-head");if(ph){ph.style.fontSize=f.toFixed(3)+"px";
+    var hw=ph.parentNode;
+    if(hw&&hw.className==="headwrap"){hw.style.fontSize=f.toFixed(3)+"px";}}
+  var cs=getComputedStyle(pan);
+  var w=pan.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+  if(w>0){var g=Math.min(15,Math.max(9,w/32));
+    var t=document.querySelector(".top"),p=document.querySelector(".panel"),
+        b=document.querySelector(".brand");
+    if(t)t.style.fontSize=g.toFixed(3)+"px";
+    if(p)p.style.fontSize=g.toFixed(3)+"px";
+    if(b)b.style.fontSize=g.toFixed(3)+"px";}
+}
+function refresh(){
+  fitFont();
+  if(!window.__pani){return;}
+  readState();
+  var st={name:ST.name,gender:ST.gender,question:ST.question,cal:ST.cal,
+    y:ST.y,m:ST.m,d:ST.d,h:ST.h,i:ST.i,leap:ST.leap,yao:ST.yao,
+    lateZi:window.__INIT__.lateZi!==false};
+  var r=window.__pani.compute(st);
+  $("pan-head").innerHTML=r.head;
+  $("pan-board").innerHTML=r.board+(r.board&&!r.changed?'\n<p class="note">六爻安静，无变卦。</p>':'');
+  if(!r.board){return;}          /* 越界等异常：只留一行提示，不画空盘 */
+  /* 静卦页掷出变卦后盘面变九列：sixpage 类必须同步摘除（指令 69），
+     否则 fitFont/CSS 仍按静卦大字比例算，字号停在 15px 上限 */
+  var pan=document.querySelector(".pan");
+  if(pan){pan.classList.toggle("sixpage",!r.changed);}
+  fitFont();   /* 重绘＋切类之后再量：盘宽/列数已变，旧内联字号必须重算（指令 69） */
+}
+function syncYaoRow(){
+  var auto=document.querySelector('input[name=mode]:checked').value==="auto";
+  $("row-yao").style.display=auto?"none":"";
+  var btn=$("f-recast");
+  btn.hidden=!auto;
+  btn.textContent=ST.tossed?"重新摇卦":"点击起卦";   /* 未掷 → 点击起卦；掷过 → 重新摇卦 */
+}
+function syncCal(){
+  var cal=document.querySelector('input[name=cal]:checked').value;
+  var y=+$("f-y").value;
+  if(cal==="lunar"){
+    var cur=window.__pani.solarToLunar(y,+$("f-m").value,+$("f-d").value);
+    fill($("f-m"),monthsLunar(cur.y),cur.leap?"1-"+cur.m:"0-"+cur.m);
+    fill($("f-d"),daysLunar(cur.y,cur.m,cur.leap),cur.d);
+  }else{
+    /* 农历 → 公历：真把当前农历日换算成公历日再填，而不是把月份重置到 1 月 */
+    var v=String($("f-m").value).split("-");
+    var s=window.__pani.lunarToSolar(y,+(v[1]||v[0]),+$("f-d").value,v[0]==="1");
+    fill($("f-m"),monthsSolar(),s[1]);
+    fill($("f-d"),daysSolar(s[0],s[1]),s[2]);
+  }
+}
+/* 换年换月后按该历法实有日月重填下拉（指令 89）：
+   公历按大小月／闰年；农历按小月大月，年变则闰月随之来去 */
+function syncSolarDate(){
+  var y=+$("f-y").value, m=+$("f-m").value, opts=daysSolar(y,m);
+  fill($("f-d"),opts,Math.min(+$("f-d").value||1,opts.length));
+}
+function syncLunarDate(){
+  var y=+$("f-y").value, v=String($("f-m").value).split("-");
+  var lm=+(v[1]||v[0])||1, lp=(v[0]==="1"), opts=monthsLunar(y), has=false, i;
+  for(i=0;i<opts.length;i++){if(String(opts[i][0])===(lp?"1-":"0-")+lm){has=true;break;}}
+  if(!has){lp=false;}                       /* 该年无此闰月：落回本月，不硬凑 */
+  fill($("f-m"),opts,(lp?"1-":"0-")+lm);
+  var d=daysLunar(y,lm,lp);
+  fill($("f-d"),d,Math.min(+$("f-d").value||1,d.length));
+}
+function syncDate(){
+  if(document.querySelector('input[name=cal]:checked').value==="lunar"){syncLunarDate();}
+  else{
+    /* 月下拉若还是农历值（"0-6"），先换回公历项，免得读出 NaN */
+    if(!/^\d+$/.test(String($("f-m").value))){fill($("f-m"),monthsSolar(),1);}
+    syncSolarDate();
+  }
+}
+function setNow(){
+  var d=new Date();
+  document.querySelector('input[name=cal][value="solar"]').checked=true;
+  fill($("f-y"),years(),d.getFullYear());
+  fill($("f-m"),monthsSolar(),d.getMonth()+1);
+  fill($("f-d"),daysSolar(d.getFullYear(),d.getMonth()+1),d.getDate());
+  fill($("f-h"),hours(),d.getHours());
+  fill($("f-i"),minutes(),d.getMinutes());
+}
+/* 复制卦例（指令 83）：把「起卦信息＋卦象」按富文本一并写入剪贴板——
+   与手工选中复制同一路径，贴到 Word／微信都保留版式。
+   选区只包 #pan-head…#pan-board；按钮在 .headwrap 内、head 之外，故不会进剪贴板 */
+function copyGua(){
+  var head=$("pan-head"),board=$("pan-board");
+  if(!head||!board){return false;}
+  var sel=window.getSelection();
+  var r=document.createRange();
+  r.setStartBefore(head);r.setEndAfter(board);
+  sel.removeAllRanges();sel.addRange(r);
+  var ok=false;
+  try{ok=document.execCommand("copy");}catch(e){ok=false;}
+  sel.removeAllRanges();
+  return ok;
+}
+/* 兜底：富文本路径不可用时写纯文本（信息四行＋盘面），保证按钮仍有反馈 */
+function copyPlain(){
+  var head=$("pan-head"),board=$("pan-board");
+  var t=((head&&head.innerText)||"")+"\n\n"+((board&&board.innerText)||"");
+  t=t.replace(/[ \t]+\n/g,"\n").replace(/\n{3,}/g,"\n\n").trim();
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){flashCopy(true);},
+      function(){flashCopy(legacyCopy(t));});
+    return;
+  }
+  flashCopy(legacyCopy(t));
+}
+function legacyCopy(t){
+  var ta=document.createElement("textarea");
+  ta.value=t;ta.setAttribute("readonly","");
+  ta.style.cssText="position:fixed;left:-9999px;top:0";
+  document.body.appendChild(ta);ta.select();
+  var ok=false;
+  try{ok=document.execCommand("copy");}catch(e){ok=false;}
+  document.body.removeChild(ta);
+  return ok;
+}
+function flashCopy(ok){
+  var b=$("f-copy");if(!b){return;}
+  b.textContent=ok?"已复制":"复制失败";
+  if(ok){b.classList.add("done");}
+  if(flashCopy._t){clearTimeout(flashCopy._t);}
+  flashCopy._t=setTimeout(function(){
+    b.textContent="复制卦例";b.classList.remove("done");
+  },1300);
+}
+function bind(){
+  var ini=window.__INIT__;
+  fill($("f-y"),years(),ini.y);
+  /* 首屏控件须按起卦时的历法填：农历页若按公历填月，读出来是「7月」而非「0-7／1-7」，
+     readState 取不到月序，农历日期会整盘算错（指令 89） */
+  if(ini.cal==="lunar"){
+    fill($("f-m"),monthsLunar(ini.y),(ini.leap?"1-":"0-")+ini.m);
+    fill($("f-d"),daysLunar(ini.y,ini.m,ini.leap),ini.d);
+  }else{
+    fill($("f-m"),monthsSolar(),ini.m);
+    fill($("f-d"),daysSolar(ini.y,ini.m),ini.d);
+  }
+  fill($("f-h"),hours(),ini.h);
+  fill($("f-i"),minutes(),ini.i);
+  for(var i=1;i<=6;i++){
+    var el=$("y"+i),h="";
+    for(var k=0;k<YAOOPT.length;k++){h+='<option value="'+YAOOPT[k][1]+'">'+YAOOPT[k][0]+"</option>";}
+    el.innerHTML=h;el.value=String(window.__INIT__.yao[i-1]);
+  }
+  $("f-name").value=window.__INIT__.name||"";
+  $("f-gender").value=window.__INIT__.gender||"男";
+  $("f-q").value=window.__INIT__.question||"";
+  document.querySelector('input[name=mode][value="'+window.__INIT__.mode+'"]').checked=true;
+  document.querySelector('input[name=cal][value="'+window.__INIT__.cal+'"]').checked=true;
+  ST.tossed=false;
+
+  var nodes=document.querySelectorAll("#panel input, #panel select");
+  for(var n=0;n<nodes.length;n++){
+    nodes[n].addEventListener("change",function(e){
+      if(e.target.name==="mode"){syncYaoRow();}
+      if(e.target.name==="cal"){syncCal();}
+      else if(e.target.id==="f-y"||e.target.id==="f-m"){syncDate();}
+      refresh();
+    });
+    nodes[n].addEventListener("input",function(e){
+      if(e.target.tagName==="INPUT"&&e.target.type==="text"){refresh();}
+    });
+  }
+  $("f-now").addEventListener("click",function(){setNow();refresh();});
+  $("f-fold").addEventListener("click",function(){
+    var p=$("panel"),open=!p.hidden;
+    p.hidden=open;
+    document.querySelector(".pan").classList.toggle("collapsed",open);
+    this.setAttribute("aria-expanded",open?"false":"true");
+    this.textContent=open?"展开排卦 ▼":"收起排卦 ▲";
+  });
+  $("f-recast").addEventListener("click",function(){
+    var v=tossAll();                              /* 一次摇卦：六爻各掷三枚 */
+    for(var i=0;i<6;i++){$("y"+(i+1)).value=String(v[i]);}
+    ST.tossed=true;
+    this.textContent="重新摇卦";
+    refresh();
+  });
+  var cb=$("f-copy");
+  if(cb){
+    cb.addEventListener("click",function(){
+      if(copyGua()){flashCopy(true);}else{copyPlain();}
+    });
+  }
+  syncYaoRow();
+  if(window.__INIT__.live){setNow();}     // 默认态：打开即取真实当前时刻
+  refresh();
+  window.addEventListener("resize",fitFont);
+  if(window.ResizeObserver){new ResizeObserver(fitFont).observe(document.querySelector(".pan"));}
+  window.fitFont=fitFont;   /* 供审计脚本在钉宽后手动触发 */
+}
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",bind);}else{bind();}
+})();
+</script>
+</body>
+</html>

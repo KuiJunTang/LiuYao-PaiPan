@@ -1,0 +1,71 @@
+署名许可（除署名外不保留任何权利）· Attribution-Only License
+版本 1.0 · 2026-11-03
+适用于「六爻排盘（文王卦）单文件排盘器」（下称「本作品」）
+
+════════════════════════════════════════════════════════════
+一、中文正文
+════════════════════════════════════════════════════════════
+
+版权所有 © 2026 膠東魁君堂　復城道長（https://www.kuijuntang.com）
+
+在遵守下列**唯一条件**的前提下，任何人——自然人或法人、个人或商业机构——
+均被永久、免费、不可撤销地授权，对本作品行使下列全部权利：
+
+  1. 复制、分发、发布、传播；
+  2. 修改、改编、演绎，包括删除或替换其中的品牌标识；
+  3. 商业使用（含收费服务、付费产品、企业内部使用、SaaS 与定制交付）；
+  4. 再许可（可将本作品或其演绎作品以任何许可条款授权他人，包括闭源许可）。
+
+**唯一条件（署名）**：
+
+  在本作品及其演绎作品的源代码、文档或关于页面中，保留下列署名及来源链接：
+
+      膠東魁君堂　復城道長
+      https://www.kuijuntang.com
+
+  若为演绎作品，可另加「基于……修改」字样，但不得删去上述署名。
+
+换言之：**除署名权外，著作权人放弃全部财产权利，不保留任何其他限制。**
+
+**无担保**：本作品按「现状」提供，不附带任何明示或默示的担保，包括但不限于对适销性、
+特定用途适用性与不侵权的担保。因使用本作品所产生的任何直接或间接损失，作者不承担责任。
+
+**说明**：本许可不属于 SPDX 标准许可清单，GitHub 会将其显示为「自定义许可（Other）」。
+如需在代码中引用，可使用 `LicenseRef-Attribution-Only`。
+
+════════════════════════════════════════════════════════════
+二、English Text
+════════════════════════════════════════════════════════════
+
+Copyright © 2026 KUJUNTANG (膠東魁君堂), Rev. Fucheng (復城道長)
+https://www.kuijuntang.com
+
+Permission is hereby granted, free of charge, irrevocable and worldwide, to any person
+obtaining a copy of this software and associated documentation files (the "Work"),
+to deal in the Work without restriction, including without limitation the rights to:
+
+  1. use, copy, publish, distribute, and transmit the Work;
+  2. modify, adapt, and create derivative works, including removal or replacement of
+     branding elements;
+  3. use the Work commercially (paid services, paid products, internal enterprise use,
+     SaaS, and custom delivery);
+  4. sublicense, including the right to license derivative works under any terms,
+     including proprietary terms.
+
+**The only condition** is attribution: you must retain, in the source code, documentation,
+or an "about" page of the Work or any derivative work, the following notice:
+
+      KUJUNTANG (膠東魁君堂), Rev. Fucheng (復城道長)
+      https://www.kuijuntang.com
+
+Apart from this attribution requirement, the copyright holder waives all economic rights
+and imposes no other conditions.
+
+THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE WORK OR THE USE OR OTHER DEALINGS IN THE WORK.
+
+Note: this is not an SPDX-listed license; GitHub will display it as "Other".
+For code references, use `LicenseRef-Attribution-Only`.
